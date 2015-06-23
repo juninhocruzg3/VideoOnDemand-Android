@@ -1,14 +1,24 @@
 package com.promobile.vod.vodmobile;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.LinearLayout;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
 import com.google.android.exoplayer.VideoSurfaceView;
+import com.promobile.vod.vodmobile.util.LocalStorage;
 import com.promobile.vod.vodmobile.vodplayer.VodPlayer;
+import com.promobile.vod.vodmobile.vodplayer.util.TimeFormat;
 
 import java.io.IOException;
 
@@ -19,9 +29,17 @@ public class VodPlayerActivity extends Activity {
 
     private static int NUM_RENDERER = 2;
 
+    private TextView tvCurrentPosition, tvDuration;
+    private SeekBar progressBar;
+    private LinearLayout textLinearLayout, progressLinearLayout;
+
+    private long pausePosition;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_vod_player);
 
         init();
@@ -32,8 +50,18 @@ public class VodPlayerActivity extends Activity {
     /**
      * Inicializa as variáveis
      */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void init() {
         videoSurfaceView = (VideoSurfaceView) findViewById(R.id.video_surface_view);
+
+        tvCurrentPosition = (TextView) findViewById(R.id.tv_current_position);
+        tvDuration = (TextView) findViewById(R.id.tv_duration);
+
+        progressBar = (SeekBar) findViewById(R.id.progress_bar);
+        progressBar.setProgress(0);
+
+        textLinearLayout = (LinearLayout) findViewById(R.id.layout_texts);
+        progressLinearLayout = (LinearLayout) findViewById(R.id.layout_progress);
     }
 
     private void buildBasicVodPlayer() {
@@ -45,23 +73,19 @@ public class VodPlayerActivity extends Activity {
     private void buildDashVodPlayer() {
         vodPlayer = new VodPlayer(getApplicationContext(), videoSurfaceView, NUM_RENDERER);
         try {
-            vodPlayer.builderDashPlayer(getString(R.string.url_dash_youtube));
+            vodPlayer.builderDashPlayer(LocalStorage.getInstance(getApplicationContext()).getStringFromStorage(LocalStorage.VIDEO_URL_ID));
         } catch (IOException e) {
             Log.e("VodPlayer", "Erro em vodPlayer.builderDashPlayer: " + e.getMessage());
         }
         vodPlayer.setVodPlayerListener(new VodPlayer.VodPlayerListener() {
             @Override
             public void onPrepared() {
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        vodPlayer.start();
-                    }
-                }, 20000);
-
                 gerarLogs();
+                vodPlayer.start();
             }
         });
+
+        vodPlayer.setSeekBar(progressBar);
     }
 
     private void gerarLogs() {
@@ -69,8 +93,18 @@ public class VodPlayerActivity extends Activity {
             @Override
             public void run() {
                 Log.i("VodPlayerAct", "BufferedPercentage: " + vodPlayer.getExoPlayer().getBufferedPercentage() +
+                                        "\nCurrentPosition:" + vodPlayer.getExoPlayer().getCurrentPosition() +
                                         "\nBufferedPosition: " + vodPlayer.getExoPlayer().getBufferedPosition() +
                                         "\nDuration: " + vodPlayer.getExoPlayer().getDuration());
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        tvCurrentPosition.setText(TimeFormat.miliToHHmmss(vodPlayer.getExoPlayer().getCurrentPosition()));
+                        tvDuration.setText(TimeFormat.miliToHHmmss(vodPlayer.getExoPlayer().getDuration()));
+                        progressBar.setProgress((int)(100*((float) vodPlayer.getExoPlayer().getCurrentPosition()/(float)vodPlayer.getExoPlayer().getDuration())));
+                        progressBar.setSecondaryProgress((int) (100*((float) vodPlayer.getExoPlayer().getBufferedPosition()/(float) vodPlayer.getExoPlayer().getDuration())));
+                    }
+                });
                 gerarLogs();
             }
         }, 1000);
@@ -96,5 +130,29 @@ public class VodPlayerActivity extends Activity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void onClickVideoSurfaceView(View view) {
+        setViewsVisibility();
+    }
+
+    private void setViewsVisibility() {
+        if(progressBar.getVisibility() == View.VISIBLE) {
+            progressLinearLayout.setVisibility(View.VISIBLE);
+            textLinearLayout.setVisibility(View.VISIBLE);
+        }
+        else {
+            progressLinearLayout.setVisibility(View.VISIBLE);
+            textLinearLayout.setVisibility(View.VISIBLE);
+        }
+    }
+
+    public void onClickToPlay(View view) {
+        if(vodPlayer.getPlayerStatus() == VodPlayer.PLAYING) {
+            vodPlayer.pause();
+        }
+        else {
+            vodPlayer.start();
+        }
     }
 }

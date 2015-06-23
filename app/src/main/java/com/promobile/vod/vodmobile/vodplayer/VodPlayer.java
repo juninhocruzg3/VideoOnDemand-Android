@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
+import android.widget.SeekBar;
 
 import com.google.android.exoplayer.DefaultLoadControl;
 import com.google.android.exoplayer.ExoPlaybackException;
@@ -35,6 +36,7 @@ import com.google.android.exoplayer.upstream.DataSource;
 import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer.upstream.UriDataSource;
 import com.google.android.exoplayer.util.ManifestFetcher;
+import com.promobile.vod.vodmobile.vodplayer.evaluator.ExoPlayerAdaptiveEvaluator;
 import com.promobile.vod.vodmobile.vodplayer.mpd.MpdManager;
 
 import java.io.IOException;
@@ -64,7 +66,19 @@ public class VodPlayer {
     public static final int BASIC_MODE = 1;
     public static final int DASH_MODE = 2;
 
+    public static final int UNBUILD = -1;
+    public static final int BUILDING = 0;
+    public static final int LOADING = 1;
+    public static final int READY = 2;
+    public static final int PLAYING = 3;
+    public static final int PAUSED = 4;
+
     private Context context;
+
+    /**
+     * Indica o estado atual do player
+     */
+    private int playerStatus;
 
     /**
      * Número de renderizações ??
@@ -83,10 +97,6 @@ public class VodPlayer {
      * View onde será exibido o vídeo.
      */
     private VideoSurfaceView videoSurfaceView;
-    /**
-     * Indica se existe um {@link com.google.android.exoplayer.VideoSurfaceView} válido setado na classe.
-     */
-    private boolean isValidVideoSurfaceView;
 
     /**
      * Para um ExoPlayer Mínimo
@@ -100,6 +110,7 @@ public class VodPlayer {
     private SampleSource sampleSource;
     private MediaCodecVideoTrackRenderer videoTrackRenderer;
     private MediaCodecAudioTrackRenderer audioTrackRenderer;
+    private SeekBar seekBar;
 
     /**
      * Para um ExoPlayer Dash
@@ -153,9 +164,11 @@ public class VodPlayer {
         this.videoSurfaceView = videoSurfaceView;
         this.numRenderers = numRenderers;
         this.vodPlayerListener = new DefaultVodPlayerListener();
+        this.playerStatus = UNBUILD;
     }
 
     public void builderMinimalPlayer(SurfaceHolder.Callback surfaceHolderCallback, String url) {
+        this.playerStatus = BUILDING;
         setUrl(url);
         setSurfaceHolderCallback(surfaceHolderCallback);
         setSurface();
@@ -171,6 +184,7 @@ public class VodPlayer {
         exoPlayer.sendMessage(videoTrackRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE, surface);
 
         setPlaybackMode(MINIMAL_MODE);
+        playerStatus = READY;
     }
 
     public void builderMinimalPlayer(String url) {
@@ -189,6 +203,7 @@ public class VodPlayer {
     }
 
     public void builderDashPlayer(String mdpUrl) throws IOException {
+        playerStatus = BUILDING;
         setUrl(mdpUrl);
         setSurface();
 
@@ -218,7 +233,7 @@ public class VodPlayer {
         //configurando a renderização do áudio
         audioDataSource = new UriDataSource(getUserAgent(), bandwidthMeter);
 
-        audioFormatEvaluator = new FormatEvaluator.AdaptiveEvaluator(bandwidthMeter);
+        audioFormatEvaluator = new ExoPlayerAdaptiveEvaluator(bandwidthMeter);
 
         audioManifestFetcher = new ManifestFetcher<MediaPresentationDescription>(new MediaPresentationDescriptionParser(), "VodPlayerAudio", mdpUrl, userAgent);
 
@@ -227,6 +242,7 @@ public class VodPlayer {
         }
 
         audioManifestFetcher.singleLoad(handler.getLooper(), audioManifestFletcherCallback);
+        playerStatus = LOADING;
     }
 
     private void onManifestReceive() {
@@ -264,6 +280,7 @@ public class VodPlayer {
 
             setPlaybackMode(DASH_MODE);
 
+            playerStatus = READY;
             vodPlayerListener.onPrepared();
         }
     }
@@ -278,7 +295,6 @@ public class VodPlayer {
                 surface = videoSurfaceView.getHolder().getSurface();
 
                 if(surface != null) {
-                    isValidVideoSurfaceView = true;
                     makeDebugLog("Surface não é null!");
                 }
                 else {
@@ -325,8 +341,35 @@ public class VodPlayer {
     }
 
     public void start() {
-        exoPlayer.setPlayWhenReady(true);
-        exoPlayer.sendMessage(videoTrackRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE, surface);
+        if(playerStatus == READY) {
+            exoPlayer.setPlayWhenReady(true);
+            exoPlayer.sendMessage(videoTrackRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE, surface);
+            playerStatus = PLAYING;
+        }
+        else if(playerStatus == PAUSED) {
+            exoPlayer.setPlayWhenReady(true);
+            playerStatus = PLAYING;
+        }
+    }
+
+    public void pause() {
+        if(playerStatus == PLAYING) {
+            exoPlayer.setPlayWhenReady(false);
+            playerStatus = PAUSED;
+        }
+    }
+
+    public int getPlayerStatus() {
+        return playerStatus;
+    }
+
+    public void setSeekBar(SeekBar seekBar) {
+        setSeekBar(seekBar, new DefaultOnSeekBarChangeListener());
+    }
+
+    public void setSeekBar(SeekBar seekBar, SeekBar.OnSeekBarChangeListener onSeekBarChangeListener) {
+        this.seekBar = seekBar;
+        seekBar.setOnSeekBarChangeListener(onSeekBarChangeListener);
     }
 
     public void setSurfaceHolderCallback(SurfaceHolder.Callback surfaceHolderCallback) {
@@ -543,6 +586,25 @@ public class VodPlayer {
         public void onManifestError(String contentId, IOException e) {
             makeDebugLog("audio onManifestError executado.");
             makeErrorLog("Erro em audio onManifest: " + e.getLocalizedMessage() + " | " + e.getMessage());
+        }
+    }
+
+    private class DefaultOnSeekBarChangeListener implements SeekBar.OnSeekBarChangeListener {
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            if(fromUser) {
+                exoPlayer.seekTo((long) (((float) progress / 100) * exoPlayer.getDuration()));
+            }
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+
         }
     }
 }

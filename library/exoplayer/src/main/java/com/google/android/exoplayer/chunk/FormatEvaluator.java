@@ -15,8 +15,11 @@
  */
 package com.google.android.exoplayer.chunk;
 
+import android.util.Log;
+
 import com.google.android.exoplayer.upstream.BandwidthMeter;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -232,8 +235,36 @@ public interface FormatEvaluator {
     @Override
     public void evaluate(List<? extends MediaChunk> queue, long playbackPositionUs,
         Format[] formats, Evaluation evaluation) {
+
       long bufferedDurationUs = queue.isEmpty() ? 0
           : queue.get(queue.size() - 1).endTimeUs - playbackPositionUs;
+
+        long bufferedFirshUs = queue.isEmpty() ? 0
+                : queue.get(0).startTimeUs;
+
+        long bufferedfinalUs = queue.isEmpty() ? 0
+                : queue.get(queue.size() - 1).endTimeUs;
+
+        long bandwidthBits = bandwidthMeter.getBitrateEstimate();
+        float bandwidthbytes = bandwidthBits != BandwidthMeter.NO_ESTIMATE ? ((float) bandwidthBits)/8 : -1;
+        float bandwidthkb = bandwidthBits != BandwidthMeter.NO_ESTIMATE ? bandwidthbytes / 1024 : -1;
+
+        long bufferlenghtbytes = queue.isEmpty() ? 0 : getTotalLenght(queue);
+
+        long bufferSize = queue.isEmpty() ? 1 : queue.size();
+
+        Log.d("VodPlayer.evaluate", "Avaliação será realizada: " +
+                                    "\nbufferedDurationUs = " + ((float)bufferedDurationUs)/1000000 + " s" +
+                                    "\nbufferedStartTimes = " + ((float)bufferedFirshUs)/1000000 + " s" +
+                                    "\nbufferedFinalTimes = " + ((float)bufferedfinalUs)/1000000 + " s" +
+                                    "\nPlayBack Position    = " + ((float)playbackPositionUs)/1000000 + " s" +
+                                    "\nbandwidth Meter (bits) = " + bandwidthBits + " bits" +
+                                    "\nbandwidth Meter (bytes) = " + bandwidthbytes + " b" +
+                                    "\nbandwidth Meter (kb) = " + bandwidthkb + " kb" +
+                                    "\n.\nbufferTotal (bytes) = " + bufferlenghtbytes + " bytes" +
+                                    "\nbufferTotal (kb) = " + bufferlenghtbytes/1024 + " kb" +
+                                    "\nchunckCount = " + queue.size() +
+                                    "\n.\nmedia size = " + bufferlenghtbytes/1024/bufferSize + " kb");
       Format current = evaluation.format;
       Format ideal = determineIdealFormat(formats, bandwidthMeter.getBitrateEstimate());
       boolean isHigher = ideal != null && current != null && ideal.bitrate > current.bitrate;
@@ -242,11 +273,15 @@ public interface FormatEvaluator {
         if (bufferedDurationUs < minDurationForQualityIncreaseUs) {
           // The ideal format is a higher quality, but we have insufficient buffer to
           // safely switch up. Defer switching up for now.
+
+            //Qualidade ideal é maior, porém não há buffer suficiente para fazer incremento de resolução
           ideal = current;
         } else if (bufferedDurationUs >= minDurationToRetainAfterDiscardUs) {
           // We're switching from an SD stream to a stream of higher resolution. Consider
           // discarding already buffered media chunks. Specifically, discard media chunks starting
           // from the first one that is of lower bandwidth, lower resolution and that is not HD.
+
+
           for (int i = 1; i < queue.size(); i++) {
             MediaChunk thisChunk = queue.get(i);
             long durationBeforeThisSegmentUs = thisChunk.startTimeUs - playbackPositionUs;
@@ -273,7 +308,26 @@ public interface FormatEvaluator {
       evaluation.format = ideal;
     }
 
-    /**
+      private long getTotalLenght(List<? extends MediaChunk> queue) {
+          long size = 0;
+          ArrayList<String> logs = new ArrayList<>();
+          for(int i = 0; i < queue.size(); i++) {
+              size += queue.get(i).getLength();
+              MediaChunk mediaChunk = queue.get(i);
+              logs.add("position " + (i+1) + "\nid = " + (mediaChunk.nextChunkIndex - 1));
+          }
+
+          String log = "";
+          for(int i = 0; i < logs.size(); i++) {
+                log = log + "\n.\n" + logs.get(i);
+          }
+
+          Log.d("VodPlayer.evaluate", log);
+
+          return size;
+      }
+
+      /**
      * Compute the ideal format ignoring buffer health.
      */
     protected Format determineIdealFormat(Format[] formats, long bitrateEstimate) {

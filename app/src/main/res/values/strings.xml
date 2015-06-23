@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">VodMobile</string>
 
-    <string name="hello_world">Hello world!</string>
+    <string name="author">António César Vieira da Cruz Júnior</string>
     <string name="action_settings">Settings</string>
     <string name="url_video">http://androidbegin.com/tutorial/AndroidCommercial.3gp</string>
     <string name="url_dash_v">http://download.tsi.telecom-paristech.fr/gpac/DASH_CONFORMANCE/TelecomParisTech/mp4-main-ogop/mp4-main-ogop-mpd-V-BS.mpd</string>
@@ -9,4 +9,14 @@
     <string name="url_dash_teste2">http://download.tsi.telecom-paristech.fr/gpac/DASH_CONFORMANCE/TelecomParisTech/mp4-live-periods/mp4-live-periods-mpd.mpd</string>
     <string name="url_dash_teste3">http://download.tsi.telecom-paristech.fr/gpac/DASH_CONFORMANCE/TelecomParisTech/mp4-onDemand/mp4-onDemand-mpd-AV.mpd</string>
     <string name="url_dash_youtube">http://pbus.icomp.ufam.edu.br/vod/demoplayer-youtube.mdp</string>
+    <string name="buffered_position">Buffered Position:</string>
+    <string name="current_position">Current Position:</string>
+    <string name="duration">Duration:</string>
+    <string name="play">Play</string>
+    <string name="barra">/</string>
+    <string name="traco">---</string>
+    <string name="title_activity_play_list">PlayListActivity</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="play_list">VodMobile Playlist</string>
 </resources>
