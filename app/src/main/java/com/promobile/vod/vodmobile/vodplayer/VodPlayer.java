@@ -37,6 +37,7 @@ import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer.upstream.UriDataSource;
 import com.google.android.exoplayer.util.ManifestFetcher;
 import com.promobile.vod.vodmobile.vodplayer.evaluator.ExoPlayerAdaptiveEvaluator;
+import com.promobile.vod.vodmobile.vodplayer.evaluator.VodEvaluator;
 import com.promobile.vod.vodmobile.vodplayer.mpd.MpdManager;
 
 import java.io.IOException;
@@ -221,7 +222,7 @@ public class VodPlayer {
         //Configurando a renderização do vídeo
         videoDataSource = new UriDataSource(getUserAgent(), bandwidthMeter);
 
-        formatEvaluator = new FormatEvaluator.AdaptiveEvaluator(bandwidthMeter);
+        formatEvaluator = new VodEvaluator(bandwidthMeter);
 
         manifestFetcher = new ManifestFetcher<MediaPresentationDescription>(new MediaPresentationDescriptionParser(), "VodPlayer", mdpUrl, userAgent);
 

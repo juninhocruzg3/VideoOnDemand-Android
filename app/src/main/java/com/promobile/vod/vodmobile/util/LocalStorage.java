@@ -14,6 +14,8 @@ import com.google.gson.Gson;
 public class LocalStorage {
     public static final String LABEL = "storage_label";
 
+    public static final String VIDEO_URL_ID = "video_url_id";
+
     private static final String SETTINGS = "settings";
 
     public static LocalStorage localStorage;
