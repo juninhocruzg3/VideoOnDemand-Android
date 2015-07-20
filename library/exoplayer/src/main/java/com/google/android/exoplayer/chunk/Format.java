@@ -36,6 +36,15 @@ public class Format {
 
   }
 
+    public static final class IncreasingBandwidthComparator implements Comparator<Format> {
+
+        @Override
+        public int compare(Format a, Format b) {
+            return a.bitrate - b.bitrate;
+        }
+
+    }
+
   /**
    * An identifier for the format.
    */

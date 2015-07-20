@@ -15,6 +15,9 @@
  */
 package com.google.android.exoplayer.chunk;
 
+import android.os.Handler;
+import android.os.SystemClock;
+
 import com.google.android.exoplayer.C;
 import com.google.android.exoplayer.LoadControl;
 import com.google.android.exoplayer.MediaFormat;
@@ -26,9 +29,6 @@ import com.google.android.exoplayer.TrackRenderer;
 import com.google.android.exoplayer.upstream.Loader;
 import com.google.android.exoplayer.upstream.Loader.Loadable;
 import com.google.android.exoplayer.util.Assertions;
-
-import android.os.Handler;
-import android.os.SystemClock;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -142,6 +142,7 @@ public class ChunkSampleSource implements SampleSource, Loader.Callback {
   private static final int STATE_UNPREPARED = 0;
   private static final int STATE_PREPARED = 1;
   private static final int STATE_ENABLED = 2;
+  private static final int PAUSED = 3;
 
   private static final int NO_RESET_PENDING = -1;
 

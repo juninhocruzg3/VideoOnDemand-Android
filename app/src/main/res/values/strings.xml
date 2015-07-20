@@ -19,4 +19,6 @@
 
     <string name="hello_world">Hello world!</string>
     <string name="play_list">VodMobile Playlist</string>
+    <string name="url_dash_teste_vodserver">http://vod.icomp.ufam.edu.br/datasets/dataset8/1000-3600/FPS30/onDemand/2s/onDemand_2s.mpd</string>
+    <string name="server_fail">Falha ao acessar servidor. Verifique a conexão ou tente acessar outro vídeo.</string>
 </resources>

@@ -16,7 +16,6 @@ import com.google.android.exoplayer.DefaultLoadControl;
 import com.google.android.exoplayer.ExoPlaybackException;
 import com.google.android.exoplayer.ExoPlayer;
 import com.google.android.exoplayer.ExoPlayerLibraryInfo;
-import com.google.android.exoplayer.LoadControl;
 import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
 import com.google.android.exoplayer.MediaCodecTrackRenderer;
 import com.google.android.exoplayer.MediaCodecVideoTrackRenderer;
@@ -55,6 +54,8 @@ public class VodPlayer {
 
     public interface VodPlayerListener {
         public abstract void onPrepared();
+
+        public abstract void onLoadingError();
     }
 
     private final String TAG = "VodPlayer";
@@ -121,12 +122,12 @@ public class VodPlayer {
      *
      */
     private Handler handler;
-    private LoadControl loadControl;
+    private DefaultLoadControl loadControl;
     private DefaultBandwidthMeter bandwidthMeter;
     private DataSource videoDataSource, audioDataSource;
     private ChunkSource chunkSource;
     private ChunkSource audioChunkSource;
-    private FormatEvaluator formatEvaluator;
+    private VodEvaluator formatEvaluator;
     private FormatEvaluator audioFormatEvaluator;
     private MpdManager mpdManager;
     private MpdManager audioMpdManager;
@@ -170,6 +171,7 @@ public class VodPlayer {
 
     public void builderMinimalPlayer(SurfaceHolder.Callback surfaceHolderCallback, String url) {
         this.playerStatus = BUILDING;
+
         setUrl(url);
         setSurfaceHolderCallback(surfaceHolderCallback);
         setSurface();
@@ -282,6 +284,22 @@ public class VodPlayer {
             setPlaybackMode(DASH_MODE);
 
             playerStatus = READY;
+            readyStateListener();
+
+        }
+    }
+
+    private void readyStateListener() {
+        if(exoPlayer.getBufferedPosition() < 10000) {
+            //Estado inicial de carregamento. Esperando Buffer Mínimo para iniciar
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    readyStateListener();;
+                }
+            }, 500);
+        } else {
+            //Iniciando reprodução
             vodPlayerListener.onPrepared();
         }
     }
@@ -573,6 +591,11 @@ public class VodPlayer {
         public void onPrepared() {
             Log.i(TAG, "onPrepared executado.");
         }
+
+        @Override
+        public void onLoadingError() {
+
+        }
     }
 
     private class DefaultAudioManifestFetcherCallbackForMediaPresentationDescription implements ManifestFetcher.ManifestCallback<MediaPresentationDescription> {
@@ -587,6 +610,7 @@ public class VodPlayer {
         public void onManifestError(String contentId, IOException e) {
             makeDebugLog("audio onManifestError executado.");
             makeErrorLog("Erro em audio onManifest: " + e.getLocalizedMessage() + " | " + e.getMessage());
+            vodPlayerListener.onLoadingError();
         }
     }
 

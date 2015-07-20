@@ -16,18 +16,20 @@ import java.util.List;
 public class VodEvaluator implements FormatEvaluator {
     private static final String TAG = "VodEvaluator";
 
-    private static final int L_BUFFER_1 = 10000; //Limiar 1 de avaliação do buffer = 10s (em milissegundos)
-    private static final int L_BUFFER_2 = 20000; //Limiar 2 de avaliação do buffer = 20s (em milissegundos)
-    private static final int L_BUFFER_MAX = 30000; //Limiar Máximo de avaliação do buffer = 30s (em milissegundos)
+    private static final int L_BUFFER_1 = 10000000; //Limiar 1 de avaliação do buffer = 10s (em microssegundos)
+    private static final int L_BUFFER_2 = 20000000; //Limiar 2 de avaliação do buffer = 20s (em microssegundos)
+    private static final int L_BUFFER_MAX = 30000000; //Limiar Máximo de avaliação do buffer = 30s (em microssegundos)
 
-    private static final double CONST_WEIGHT = 80 /100; //Constante de peso percentual 80%
+    private static final double CONST_WEIGHT = 80.0 /100.0; //Constante de peso percentual 80%
 
     private BandwidthMeter bandwidthMeter;
     private double bitrateMedia;
 
+    private boolean canDownload;
+
     public VodEvaluator(BandwidthMeter bandwidthMeter) {
         this.bandwidthMeter = bandwidthMeter;
-        bitrateMedia = bandwidthMeter.getBitrateEstimate();
+        bitrateMedia = 0;
     }
 
     @Override
@@ -42,60 +44,143 @@ public class VodEvaluator implements FormatEvaluator {
 
     @Override
     public void evaluate(List<? extends MediaChunk> queue, long playbackPositionUs, Format[] formats, Evaluation evaluation) {
+        if (formats[0].mimeType.substring(0, 5).equalsIgnoreCase("audio")) {
+            Log.d(TAG, "Formato de Áudio");
+        }
+        else {
+            Log.d(TAG, "Formato de Vídeo");
+        }
+
         Log.d(TAG, "Iniciando avaliação.");
         //Obtendo tempo de vídeo em buffer
         long bufferTime = queue.isEmpty() ? 0 : queue.get(queue.size() - 1).endTimeUs - playbackPositionUs;
         //Obtendo formato atual de qualidade de vídeo
         Format current = evaluation.format;
 
+        if(current == null) {
+            current = formats[formats.length-1];
+        }
+
         //À princípio, considera-se a qualidade atual como a ideal.
         Format ideal = current;
 
         double bitrate = bandwidthMeter.getBitrateEstimate();
-        bitrateMedia = CONST_WEIGHT * bitrateMedia + (1 - CONST_WEIGHT) * bitrate;
+        bitrateMedia = (bitrateMedia == 0)? bitrate: CONST_WEIGHT * bitrateMedia + (1 - CONST_WEIGHT) * bitrate;
+
+        Log.d(TAG, "Bitrate = " + bitrate);
 
         Format phi1 = calculatePhi(formats, CONST_WEIGHT * bitrate);
 
-        Format phi2 = calculatePhi(formats, bitrateMedia);
+        Format phi2 = calculatePhi(formats, CONST_WEIGHT * bitrateMedia);
 
-        if(bufferTime <= L_BUFFER_1) {
+        if (bufferTime <= L_BUFFER_1) {
             //Estado de pânico: Reduz a reprodução para a pior qualidade, a fim de não travar o vídeo.
             ideal = formats[formats.length - 1];
 
+            canDownload = true;
+
             Log.d(TAG, "estado: PÂNICO");
-        }
-        else if(bufferTime <= L_BUFFER_2) {
+        } else if (bufferTime <= L_BUFFER_2) {
             //Neste caso, avalia-se a taxa de transmissão de dados.
-            if(phi1.bitrate < current.bitrate) {
-                ideal = phi1;
+            if (phi1.bitrate < current.bitrate && canDecrease(current, formats)) {
+                //Decrementar qualidade (um perfil)
+                ideal = decrease(current, formats);
                 Log.d(TAG, "estado: REDUÇÃO");
-            }
-            else if(phi1.bitrate > current.bitrate) {
-                ideal = phi1;
+            } else if (phi1.bitrate > current.bitrate && canIncrease(current, formats)) {
+                //Incrementar qualidade (um perfil)
+                ideal = increase(current, formats);
 
                 Log.d(TAG, "estado: INCREMENTO");
             }
-        }
-        else if(bufferTime <= L_BUFFER_MAX) {
+
+            canDownload = true;
+        } else if (bufferTime < L_BUFFER_MAX) {
             //Neste caso, as condições de buffer estão boas. Será avaliado a taxa de transmissão de dados.
-            if(phi2.bitrate > current.bitrate) {
-                ideal = phi2;
+            if (phi2.bitrate > current.bitrate && phi1.bitrate > current.bitrate && canIncrease(current, formats)) {
+                ideal = increase(current, formats);
 
                 Log.d(TAG, "estado: OK");
             }
+
+            canDownload = true;
+        } else if (bufferTime >= L_BUFFER_MAX) {
+            canDownload = false;
         }
 
         evaluation.format = ideal;
 
-        Log.d(TAG, "Avaliação encerrada:\n Bitrate: " + ideal.bitrate + "\nwidth: " + ideal.width + "\nHeight: " + ideal.height);
+        Log.d(TAG, "Avaliação encerrada:\nBufferTime: " + bufferTime + "\nBitrate: " + ideal.bitrate + "\nwidth: " + ideal.width + "\nHeight: " + ideal.height
+                                                    + "\nFormato selecionado: " + (identifyFormat(ideal, formats) + 1) + "/" + formats.length);
+
+        if(!queue.isEmpty()) Log.d(TAG,  "\nQueue size = " + queue.size());
+
+    }
+
+    private boolean canDecrease(Format current, Format[] formats) {
+        int i = identifyFormat(current, formats);
+
+        if (i < formats.length) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean canIncrease(Format current, Format[] formats) {
+        int i = identifyFormat(current, formats);
+
+        if (i > 0) {
+            return true;
+        }
+        return false;
+    }
+
+    private Format increase(Format current, Format[] formats) {
+        int i = identifyFormat(current, formats);
+
+        if(i > 0) {
+            return formats[i - 1];
+        }
+
+        //Impossível incrementar. Já está na qualidade máxima
+        Log.d("VodEvaluator", "Impossível incrementar. Já está na qualidade máxima.");
+        return formats[i];
+    }
+
+    private Format decrease(Format current, Format[] formats) {
+        int i = identifyFormat(current, formats);
+
+        if(i < formats.length - 1) {
+            return formats[i + 1];
+        }
+
+        //Impossível decrementar. Já está na qualidade mínima
+        Log.d("VodEvaluator", "Impossível decrementar. Já está na qualidade mínima.");
+        return formats[i];
+    }
+
+    private int identifyFormat(Format current, Format[] formats) {
+        for (int i = 0; i < formats.length; i++) {
+            if(formats[i].bitrate == current.bitrate) {
+                return i;
+            }
+        }
+        //Algo errado ocorreu
+        Log.e("VodEvaluator", "Erro 01 - Algo errado ocorreu");
+        return 0;
     }
 
     private Format calculatePhi(Format[] formats, double bitrate) {
         for (int i = 0; i < formats.length; i++) {
-            if (formats[i].bitrate <= bitrate * CONST_WEIGHT) {
+            double bit = bitrate * CONST_WEIGHT;
+            if (formats[i].bitrate <= bit) {
                 return formats[i];
             }
         }
         return formats[formats.length-1];
+    }
+
+    public boolean isCanDownload() {
+        return canDownload;
     }
 }

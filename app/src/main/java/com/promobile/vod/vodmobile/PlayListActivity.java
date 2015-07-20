@@ -28,8 +28,8 @@ public class PlayListActivity extends Activity {
     private void init() {
         listView = (ListView) findViewById(R.id.listView);
 
-        String[] list = {"GoogleDash"};
-        final String[] url_lists = {getString(R.string.url_dash_youtube)};
+        String[] list = {"GoogleDash", "Teste VodServer"};
+        final String[] url_lists = {getString(R.string.url_dash_youtube), getString(R.string.url_dash_teste_vodserver)};
         listView.setAdapter(new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1, list));
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override

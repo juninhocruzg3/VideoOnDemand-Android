@@ -15,6 +15,9 @@
  */
 package com.google.android.exoplayer.dash;
 
+import android.net.Uri;
+import android.os.SystemClock;
+
 import com.google.android.exoplayer.BehindLiveWindowException;
 import com.google.android.exoplayer.MediaFormat;
 import com.google.android.exoplayer.ParserException;
@@ -45,9 +48,6 @@ import com.google.android.exoplayer.upstream.DataSpec;
 import com.google.android.exoplayer.upstream.NonBlockingInputStream;
 import com.google.android.exoplayer.util.ManifestFetcher;
 import com.google.android.exoplayer.util.MimeTypes;
-
-import android.net.Uri;
-import android.os.SystemClock;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -380,10 +380,25 @@ public class DashChunkSource implements ChunkSource {
       return;
     }
 
-    Chunk nextMediaChunk = newMediaChunk(representationHolder, dataSource, segmentNum,
-        evaluation.trigger);
-    lastChunkWasInitialization = false;
-    out.chunk = nextMediaChunk;
+
+      /**
+       *
+       * Este trecho faz download apenas quando o tamanho de buffer é  menor que trinta
+       *
+       */
+          long endTime = queue.isEmpty()? 0: queue.get(queue.size() - 1).endTimeUs;
+          long bufferTime = endTime > 0? endTime - playbackPositionUs:0;
+
+          if(bufferTime < 30000000) {
+              //Buffering State
+              Chunk nextMediaChunk = newMediaChunk(representationHolder, dataSource, segmentNum,
+                      evaluation.trigger);
+              lastChunkWasInitialization = false;
+              out.chunk = nextMediaChunk;
+          }
+          else {
+              //Steady State
+          }
   }
 
   @Override
