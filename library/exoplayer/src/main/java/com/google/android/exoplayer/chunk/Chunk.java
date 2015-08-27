@@ -182,4 +182,7 @@ public abstract class Chunk implements Loadable {
     }
   }
 
+    public DataSpec getDataSpec() {
+        return dataSpec;
+    }
 }

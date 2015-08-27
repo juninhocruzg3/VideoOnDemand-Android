@@ -2,7 +2,35 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Base.Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
+        <item name="android:actionBarStyle">@style/ActionBar.Solid.Vodmobile</item>
+        <item name="android:actionModeBackground">@drawable/cab_background_top_vodmobile</item>
+
+        <!-- Light.DarkActionBar specific -->
+        <item name="android:actionBarWidgetTheme">@style/Theme.Vodmobile.Widget</item>
     </style>
 
+    <style name="ActionBar.Solid.Vodmobile" parent="@android:style/Widget.Holo.Light.ActionBar.Solid.Inverse">
+        <item name="android:background">@drawable/ab_solid_vodmobile</item>
+        <item name="android:backgroundStacked">@drawable/ab_stacked_solid_vodmobile</item>
+        <item name="android:backgroundSplit">@drawable/ab_bottom_solid_vodmobile</item>
+        <item name="android:progressBarStyle">@style/ProgressBar.Vodmobile</item>
+    </style>
+
+    <style name="ProgressBar.Vodmobile" parent="@android:style/Widget.Holo.ProgressBar.Horizontal">
+        <item name="android:progressDrawable">@drawable/progress_horizontal_vodmobile</item>
+    </style>
+
+    <!-- this style is only referenced in a Light.DarkActionBar based theme -->
+    <style name="Theme.Vodmobile.Widget" parent="@android:style/Theme.Holo">
+        <item name="android:popupMenuStyle">@style/PopupMenu.Vodmobile</item>
+        <item name="android:dropDownListViewStyle">@style/DropDownListView.Vodmobile</item>
+    </style>
+
+    <style name="PopupMenu.Vodmobile" parent="@android:style/Widget.Holo.ListPopupWindow">
+        <item name="android:popupBackground">@drawable/menu_dropdown_panel_vodmobile</item>
+    </style>
+
+    <style name="DropDownListView.Vodmobile" parent="@android:style/Widget.Holo.ListView.DropDown">
+        <item name="android:listSelector">@drawable/selectable_background_vodmobile</item>
+    </style>
 </resources>

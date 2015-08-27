@@ -2,7 +2,7 @@
     <string name="app_name">VodMobile</string>
 
     <string name="author">António César Vieira da Cruz Júnior</string>
-    <string name="action_settings">Settings</string>
+    <string name="action_settings">Configurações</string>
     <string name="url_video">http://androidbegin.com/tutorial/AndroidCommercial.3gp</string>
     <string name="url_dash_v">http://download.tsi.telecom-paristech.fr/gpac/DASH_CONFORMANCE/TelecomParisTech/mp4-main-ogop/mp4-main-ogop-mpd-V-BS.mpd</string>
     <string name="url_dash_av">http://download.tsi.telecom-paristech.fr/gpac/DASH_CONFORMANCE/TelecomParisTech/mp4-main-ogop/mp4-main-ogop-mpd-AV-BS.mpd</string>
@@ -15,10 +15,24 @@
     <string name="play">Play</string>
     <string name="barra">/</string>
     <string name="traco">---</string>
-    <string name="title_activity_play_list">PlayListActivity</string>
 
     <string name="hello_world">Hello world!</string>
-    <string name="play_list">VodMobile Playlist</string>
-    <string name="url_dash_teste_vodserver">http://vod.icomp.ufam.edu.br/datasets/dataset8/1000-3600/FPS30/onDemand/2s/onDemand_2s.mpd</string>
+    <string name="play_list">Lista de Reprodução</string>
+    <string name="url_dash_2s_vodserver_dataset8">http://vod.icomp.ufam.edu.br/datasets/dataset8/1000-3600/FPS30/onDemand/2s/onDemand_2s.mpd</string>
+
+    <string name="url_dash_2s_vodserver_dataset7">http://vod.icomp.ufam.edu.br/datasets/dataset7/250-3600/FPS30/onDemand/2s/onDemand_2s.mpd</string>
     <string name="server_fail">Falha ao acessar servidor. Verifique a conexão ou tente acessar outro vídeo.</string>
+    <string name="title_activity_splash">SplashActivity</string>
+    <string name="loading">Carregando...</string>
+    <string name="title_activity_description">Sintel - Open Movie</string>
+    <string name="title">Título</string>
+    <string name="duration_default">0:00s</string>
+    <string name="date_default">02 de Agosto de 2015</string>
+    <string name="description_default">Descrição do vídeo</string>
+    <string name="sintel_description">\"Sintel\" is an independently produced short film, initiated by the Blender Foundation as a means to further improve and validate the free/open source 3D creation suite Blender. With initial funding provided by 1000s of donations via the internet community, it has again proven to be a viable development model for both open 3D technology as for independent animation film. This 15 minute film has been realized in the studio of the Amsterdam Blender Institute, by an international team of artists and developers. In addition to that, several crucial technical and creative targets have been realized online, by developers and artists and teams all over the world. \n\nwww.sintel.org</string>
+    <string name="title_activity_settings">SettingsActivity</string>
+    <string name="format_evaluator">Formato de Avaliação:</string>
+    <string name="evaluator_adaptech">AdapTech Evaluator</string>
+    <string name="evaluator_festive">FESTIVE Evaluator</string>
+    <string name="save">Salvar</string>
 </resources>

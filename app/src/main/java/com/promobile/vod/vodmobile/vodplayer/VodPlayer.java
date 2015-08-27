@@ -35,8 +35,9 @@ import com.google.android.exoplayer.upstream.DataSource;
 import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer.upstream.UriDataSource;
 import com.google.android.exoplayer.util.ManifestFetcher;
-import com.promobile.vod.vodmobile.vodplayer.evaluator.ExoPlayerAdaptiveEvaluator;
-import com.promobile.vod.vodmobile.vodplayer.evaluator.VodEvaluator;
+import com.promobile.vod.vodmobile.vodplayer.evaluator.AdaptechEvaluator;
+import com.promobile.vod.vodmobile.vodplayer.evaluator.FestiveEvaluator;
+import com.promobile.vod.vodmobile.vodplayer.evaluator.chunkSource.AdapTechDashChunkSource;
 import com.promobile.vod.vodmobile.vodplayer.mpd.MpdManager;
 
 import java.io.IOException;
@@ -74,6 +75,9 @@ public class VodPlayer {
     public static final int READY = 2;
     public static final int PLAYING = 3;
     public static final int PAUSED = 4;
+
+    public static final int ADAPTECH_EVALUATOR = 0;
+    public static final int FESTIVE_EVALUATOR = 1;
 
     private Context context;
 
@@ -127,7 +131,8 @@ public class VodPlayer {
     private DataSource videoDataSource, audioDataSource;
     private ChunkSource chunkSource;
     private ChunkSource audioChunkSource;
-    private VodEvaluator formatEvaluator;
+    private FormatEvaluator formatEvaluator;
+    private int evaluationMode;
     private FormatEvaluator audioFormatEvaluator;
     private MpdManager mpdManager;
     private MpdManager audioMpdManager;
@@ -205,7 +210,12 @@ public class VodPlayer {
         setPlaybackMode(BASIC_MODE);
     }
 
-    public void builderDashPlayer(String mdpUrl) throws IOException {
+    public void builderDashPlayer(String mpdUrl) throws IOException {
+        this.builderDashPlayer(mpdUrl, ADAPTECH_EVALUATOR);
+    }
+
+    public void builderDashPlayer(String mdpUrl, int evaluationMode) throws IOException {
+        this.evaluationMode = evaluationMode;
         playerStatus = BUILDING;
         setUrl(mdpUrl);
         setSurface();
@@ -224,7 +234,12 @@ public class VodPlayer {
         //Configurando a renderização do vídeo
         videoDataSource = new UriDataSource(getUserAgent(), bandwidthMeter);
 
-        formatEvaluator = new VodEvaluator(bandwidthMeter);
+        if(evaluationMode == ADAPTECH_EVALUATOR) {
+            formatEvaluator = new AdaptechEvaluator(bandwidthMeter);
+        }
+        else if(evaluationMode == FESTIVE_EVALUATOR) {
+            formatEvaluator = new FestiveEvaluator();
+        }
 
         manifestFetcher = new ManifestFetcher<MediaPresentationDescription>(new MediaPresentationDescriptionParser(), "VodPlayer", mdpUrl, userAgent);
 
@@ -236,7 +251,7 @@ public class VodPlayer {
         //configurando a renderização do áudio
         audioDataSource = new UriDataSource(getUserAgent(), bandwidthMeter);
 
-        audioFormatEvaluator = new ExoPlayerAdaptiveEvaluator(bandwidthMeter);
+        audioFormatEvaluator = new AdaptechEvaluator(bandwidthMeter);
 
         audioManifestFetcher = new ManifestFetcher<MediaPresentationDescription>(new MediaPresentationDescriptionParser(), "VodPlayerAudio", mdpUrl, userAgent);
 
@@ -256,8 +271,15 @@ public class VodPlayer {
             try {
                 List<Representation> videoRepresentationList = mpdManager.getVideoRepresentationList();
                 List<Representation> audioRepresentationList = audioMpdManager.getAudioRepresentationList();
-                chunkSource = new DashChunkSource(videoDataSource, formatEvaluator, videoRepresentationList);
-                audioChunkSource = new DashChunkSource(audioDataSource, formatEvaluator, audioRepresentationList);
+
+                if(evaluationMode == ADAPTECH_EVALUATOR) {
+                    chunkSource = new AdapTechDashChunkSource(videoDataSource, formatEvaluator, videoRepresentationList);
+                    audioChunkSource = new AdapTechDashChunkSource(audioDataSource, formatEvaluator, audioRepresentationList);
+                }
+                else {
+                    chunkSource = new DashChunkSource(videoDataSource, formatEvaluator, videoRepresentationList);
+                    audioChunkSource = new DashChunkSource(audioDataSource, formatEvaluator, audioRepresentationList);
+                }
             } catch (Exception e) {
                 Log.e(TAG, "Erro em DashChunckSource: " + e.getLocalizedMessage() + " | " + e.getMessage());
             }
@@ -290,7 +312,7 @@ public class VodPlayer {
     }
 
     private void readyStateListener() {
-        if(exoPlayer.getBufferedPosition() < 10000) {
+        if(evaluationMode == ADAPTECH_EVALUATOR && exoPlayer.getBufferedPosition() < 10000) {
             //Estado inicial de carregamento. Esperando Buffer Mínimo para iniciar
             new Handler().postDelayed(new Runnable() {
                 @Override

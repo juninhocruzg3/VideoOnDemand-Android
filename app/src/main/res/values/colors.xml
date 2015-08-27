@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="vod_green">#12a3a5</color>
+    <color name="vod_yellow">#ffb31c</color>
+    <color name="black_transparent">#44000000</color>
+</resources>

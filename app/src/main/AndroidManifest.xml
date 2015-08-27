@@ -8,22 +8,34 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/vod_logo"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".VodPlayerActivity"
+            android:name=".activities.VodPlayerActivity"
             android:label="@string/app_name"
             android:screenOrientation="landscape" >
         </activity>
         <activity
-            android:name=".PlayListActivity"
-            android:label="@string/title_activity_play_list" >
+            android:name=".activities.PlayListActivity"
+            android:label="@string/play_list" >
+        </activity>
+        <activity
+            android:name=".activities.SplashActivity"
+            android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".activities.DescriptionActivity"
+            android:label="@string/title_activity_description" >
+        </activity>
+        <activity
+            android:name=".activities.SettingsActivity"
+            android:label="@string/title_activity_settings" >
         </activity>
     </application>
 

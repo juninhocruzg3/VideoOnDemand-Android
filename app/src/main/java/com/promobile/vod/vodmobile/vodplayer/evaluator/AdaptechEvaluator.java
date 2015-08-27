@@ -6,15 +6,17 @@ import com.google.android.exoplayer.chunk.Format;
 import com.google.android.exoplayer.chunk.FormatEvaluator;
 import com.google.android.exoplayer.chunk.MediaChunk;
 import com.google.android.exoplayer.upstream.BandwidthMeter;
+import com.promobile.vod.vodmobile.vodplayer.logs.ChunkLog;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by CRUZ JR, A.C.V. on 19/06/15.
  * Esta classe implementa um Avaliador de Formatos para o VodPlayer, que utiliza o ExoPlayer.
  */
-public class VodEvaluator implements FormatEvaluator {
-    private static final String TAG = "VodEvaluator";
+public class AdaptechEvaluator implements FormatEvaluator {
+    private static final String TAG = "AdapTechEvaluator";
 
     private static final int L_BUFFER_1 = 10000000; //Limiar 1 de avaliação do buffer = 10s (em microssegundos)
     private static final int L_BUFFER_2 = 20000000; //Limiar 2 de avaliação do buffer = 20s (em microssegundos)
@@ -22,14 +24,19 @@ public class VodEvaluator implements FormatEvaluator {
 
     private static final double CONST_WEIGHT = 80.0 /100.0; //Constante de peso percentual 80%
 
+    private static final int TIME_LIMIT_TO_CALC_AVERAGE_BANDWIDTH = 15; //Tempo limite para calcular bandwidth médio = 15s (em segundos)
+
+    private ArrayList<Double> historic;
+
     private BandwidthMeter bandwidthMeter;
     private double bitrateMedia;
 
     private boolean canDownload;
 
-    public VodEvaluator(BandwidthMeter bandwidthMeter) {
+    public AdaptechEvaluator(BandwidthMeter bandwidthMeter) {
         this.bandwidthMeter = bandwidthMeter;
         bitrateMedia = 0;
+        historic = new ArrayList<>();
     }
 
     @Override
@@ -44,11 +51,13 @@ public class VodEvaluator implements FormatEvaluator {
 
     @Override
     public void evaluate(List<? extends MediaChunk> queue, long playbackPositionUs, Format[] formats, Evaluation evaluation) {
+        boolean isVideo = false;
         if (formats[0].mimeType.substring(0, 5).equalsIgnoreCase("audio")) {
             Log.d(TAG, "Formato de Áudio");
         }
         else {
             Log.d(TAG, "Formato de Vídeo");
+            isVideo = true;
         }
 
         Log.d(TAG, "Iniciando avaliação.");
@@ -65,13 +74,27 @@ public class VodEvaluator implements FormatEvaluator {
         Format ideal = current;
 
         double bitrate = bandwidthMeter.getBitrateEstimate();
-        bitrateMedia = (bitrateMedia == 0)? bitrate: CONST_WEIGHT * bitrateMedia + (1 - CONST_WEIGHT) * bitrate;
+
+        Log.d(TAG, "historico.size= " + historic.size());
+
+        double bitrateMedia2 = 0;
+        if(bitrate != -1) {
+            if (isVideo) {
+                if(!queue.isEmpty()) {
+                    ChunkLog chunckLog = ChunkLog.addChunkLog(bitrate, queue.get(queue.size()-1).getDataSpec().length);
+                    bitrateMedia2 = calculateBitrateMedia(ChunkLog.getInstance());
+                    Log.d(TAG, "Bitrate Média [2] = " + bitrateMedia2);
+                }
+            }
+        }
+
+        bitrateMedia = (bitrateMedia <= 0)? bitrate: CONST_WEIGHT * bitrateMedia + (1 - CONST_WEIGHT) * bitrate;
 
         Log.d(TAG, "Bitrate = " + bitrate);
 
         Format phi1 = calculatePhi(formats, CONST_WEIGHT * bitrate);
 
-        Format phi2 = calculatePhi(formats, CONST_WEIGHT * bitrateMedia);
+        Format phi2 = calculatePhi(formats, CONST_WEIGHT * bitrateMedia2);
 
         if (bufferTime <= L_BUFFER_1) {
             //Estado de pânico: Reduz a reprodução para a pior qualidade, a fim de não travar o vídeo.
@@ -114,6 +137,41 @@ public class VodEvaluator implements FormatEvaluator {
 
         if(!queue.isEmpty()) Log.d(TAG,  "\nQueue size = " + queue.size());
 
+    }
+
+    private double calculateBitrateMedia(ArrayList<ChunkLog> chunkLogsList) {
+        double media = 0;
+
+        if(chunkLogsList.isEmpty()) {
+            media = 0;
+        }
+        else {
+            int firshIndexInTime = calculateFirshIndexInTime(chunkLogsList);
+
+            media = chunkLogsList.get(firshIndexInTime).getBandWidthMeter();
+            for (int i = firshIndexInTime+1; i < chunkLogsList.size(); i++) {
+                media = (CONST_WEIGHT * media) + ((1 - CONST_WEIGHT) * chunkLogsList.get(i).getBandWidthMeter());
+            }
+        }
+
+        return media;
+    }
+
+    private int calculateFirshIndexInTime(ArrayList<ChunkLog> chunkLogsList) {
+        int firshIndexInTime = chunkLogsList.size();
+        double totalTime = 0;
+        do {
+            if(firshIndexInTime == 0)
+                return firshIndexInTime;
+            else {
+                firshIndexInTime--;
+            }
+
+            if(chunkLogsList.get(firshIndexInTime) != null)
+                totalTime += ((double) chunkLogsList.get(firshIndexInTime).getBytes()) / chunkLogsList.get(firshIndexInTime).getBandWidthMeter();
+        } while (totalTime < TIME_LIMIT_TO_CALC_AVERAGE_BANDWIDTH);
+
+        return  firshIndexInTime;
     }
 
     private boolean canDecrease(Format current, Format[] formats) {

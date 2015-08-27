@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center" >
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:id="@+id/image_video"
+        android:src="@mipmap/vod_logo"
+        android:layout_alignParentTop="true"
+        android:layout_centerInParent="true"
+        android:contentDescription="@string/app_name"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:id="@+id/relative_layout"
+        android:background="@color/black_transparent"
+        android:gravity="center_horizontal"
+        android:layout_alignParentTop="true"
+        android:layout_centerInParent="true"
+        android:layout_marginTop="17dp"
+        android:layout_marginBottom="17dp">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            android:text="@string/title"
+            android:id="@+id/title_video"
+            android:gravity="center_horizontal"
+            android:layout_above="@+id/duration_video"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:text="@string/duration_default"
+            android:id="@+id/duration_video"
+            android:gravity="center_horizontal"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="5dp"/>
+
+    </RelativeLayout>
+
+</RelativeLayout>

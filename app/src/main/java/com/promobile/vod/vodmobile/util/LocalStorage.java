@@ -14,9 +14,23 @@ import com.google.gson.Gson;
 public class LocalStorage {
     public static final String LABEL = "storage_label";
 
-    public static final String VIDEO_URL_ID = "video_url_id";
+    /**
+     * Type: String
+     */
+    public static final String VIDEO_URL = "video_url";
+
+    /**
+     * Type: boolean
+     */
+    public static final String IS_FORMAT_SELECTED = "is_format_selected";
+
+    /**
+     * Type: int
+     */
+    public static final String FORMAT_SELECTED = "format_selected";
 
     private static final String SETTINGS = "settings";
+
 
     public static LocalStorage localStorage;
     private SharedPreferences settings;

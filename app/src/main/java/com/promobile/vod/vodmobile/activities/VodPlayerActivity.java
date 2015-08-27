@@ -1,4 +1,4 @@
-package com.promobile.vod.vodmobile;
+package com.promobile.vod.vodmobile.activities;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -17,8 +17,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.exoplayer.VideoSurfaceView;
+import com.promobile.vod.vodmobile.R;
 import com.promobile.vod.vodmobile.util.LocalStorage;
 import com.promobile.vod.vodmobile.vodplayer.VodPlayer;
+import com.promobile.vod.vodmobile.vodplayer.util.TimeFormat;
 
 import java.io.IOException;
 
@@ -32,6 +34,8 @@ public class VodPlayerActivity extends Activity {
     private TextView tvCurrentPosition, tvDuration;
     private SeekBar progressBar;
     private LinearLayout textLinearLayout, progressLinearLayout;
+
+    private long currentPosition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,9 +73,14 @@ public class VodPlayerActivity extends Activity {
     }
 
     private void buildDashVodPlayer() {
+        LocalStorage localStorage = LocalStorage.getInstance(getApplicationContext());
+
+        int dash_evaluator_mode = localStorage.getIntFromStorage(LocalStorage.FORMAT_SELECTED);
+        String url = localStorage.getStringFromStorage(LocalStorage.VIDEO_URL);
+
         vodPlayer = new VodPlayer(getApplicationContext(), videoSurfaceView, NUM_RENDERER);
         try {
-            vodPlayer.builderDashPlayer(LocalStorage.getInstance(getApplicationContext()).getStringFromStorage(LocalStorage.VIDEO_URL_ID));
+            vodPlayer.builderDashPlayer(url, dash_evaluator_mode);
         } catch (IOException e) {
             Log.e("VodPlayer", "Erro em vodPlayer.builderDashPlayer: " + e.getMessage());
         }
@@ -98,10 +107,19 @@ public class VodPlayerActivity extends Activity {
             @Override
             public void run() {
                 Log.i("VodPlayerAct", "BufferedPercentage: " + vodPlayer.getExoPlayer().getBufferedPercentage() +
-                                        "\nCurrentPosition:" + ((double)vodPlayer.getExoPlayer().getCurrentPosition()/1000.0) + "s" +
-                                        "\nBufferedPosition: " + ((double)vodPlayer.getExoPlayer().getBufferedPosition()/1000.0) + "s" +
-                                        "\nDuration: " + ((double)vodPlayer.getExoPlayer().getDuration()/1000.0) + "s" +
-                                        "\nBufferTime: " + ((double)(vodPlayer.getExoPlayer().getBufferedPosition() - vodPlayer.getExoPlayer().getCurrentPosition()))/1000.0 + "s");
+                        "\nCurrentPosition:" + ((double)vodPlayer.getExoPlayer().getCurrentPosition()/1000.0) + "s" +
+                        "\nBufferedPosition: " + ((double)vodPlayer.getExoPlayer().getBufferedPosition()/1000.0) + "s" +
+                        "\nDuration: " + ((double)vodPlayer.getExoPlayer().getDuration()/1000.0) + "s" +
+                        "\nBufferTime: " + ((double)(vodPlayer.getExoPlayer().getBufferedPosition() - vodPlayer.getExoPlayer().getCurrentPosition()))/1000.0 + "s");
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        tvCurrentPosition.setText(TimeFormat.miliToHHmmss(vodPlayer.getExoPlayer().getCurrentPosition()));
+                        tvDuration.setText(TimeFormat.miliToHHmmss(vodPlayer.getExoPlayer().getDuration()));
+                        progressBar.setProgress((int)(100*((float) vodPlayer.getExoPlayer().getCurrentPosition()/(float)vodPlayer.getExoPlayer().getDuration())));
+                        progressBar.setSecondaryProgress((int) (100*((float) vodPlayer.getExoPlayer().getBufferedPosition()/(float) vodPlayer.getExoPlayer().getDuration())));
+                    }
+                });
                 gerarLogs();
             }
         }, 1000);
@@ -130,13 +148,18 @@ public class VodPlayerActivity extends Activity {
     }
 
     public void onClickVideoSurfaceView(View view) {
-        setViewsVisibility();
+        if(vodPlayer.getPlayerStatus() == VodPlayer.PLAYING) {
+            vodPlayer.pause();
+        }
+        else {
+            vodPlayer.start();
+        }
     }
 
     private void setViewsVisibility() {
         if(progressBar.getVisibility() == View.VISIBLE) {
-            progressLinearLayout.setVisibility(View.VISIBLE);
-            textLinearLayout.setVisibility(View.VISIBLE);
+            progressLinearLayout.setVisibility(View.INVISIBLE);
+            textLinearLayout.setVisibility(View.INVISIBLE);
         }
         else {
             progressLinearLayout.setVisibility(View.VISIBLE);
