@@ -17,6 +17,7 @@ package com.promobile.vod.vodmobile.vodplayer.evaluator.chunkSource;
 
 import android.net.Uri;
 import android.os.SystemClock;
+import android.util.Log;
 
 import com.google.android.exoplayer.BehindLiveWindowException;
 import com.google.android.exoplayer.MediaFormat;
@@ -53,10 +54,12 @@ import com.google.android.exoplayer.util.MimeTypes;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 
 /**
@@ -65,6 +68,10 @@ import java.util.UUID;
  * This implementation currently supports fMP4, webm, and webvtt.
  */
 public class FestiveDashChunkSource implements ChunkSource {
+  public static long DELAYING;
+  public static long DELTA;
+  public static boolean IS_DELAYING;
+  public static int threadKilled;
 
   /**
    * Thrown when an AdaptationSet is missing from the MPD.
@@ -382,10 +389,54 @@ public class FestiveDashChunkSource implements ChunkSource {
       return;
     }
 
-    Chunk nextMediaChunk = newMediaChunk(representationHolder, dataSource, segmentNum,
-            evaluation.trigger);
-    lastChunkWasInitialization = false;
-    out.chunk = nextMediaChunk;
+
+      /**
+       *
+       * Este trecho atrasa o download de chunks aleatóriamente quando o buffer ultrapassa 30s+DELTA
+       *
+       */
+          long endTime = queue.isEmpty()? 0: queue.get(queue.size() - 1).endTimeUs;
+          long bufferTime = endTime > 0? endTime - playbackPositionUs:0;
+          long time = Calendar.getInstance().getTimeInMillis();
+
+          if(DELTA == 0) {
+            DELTA = queue.isEmpty()? 0: endTime - queue.get(queue.size() - 1).startTimeUs;
+          }
+
+          if(IS_DELAYING) {
+            Log.d("FestiveDCS", "IS DELAYNG");
+              //verificar se o atraso já encerrou
+              if(DELAYING < time) {
+                IS_DELAYING = false;
+              }
+            //Para debug
+            Log.d("FestiveDCS", "Matei " + (++threadKilled) + " thread.");
+
+          }
+          else {
+              //Não está atrasando...
+            if (bufferTime < 30000000 + DELTA) {
+              Log.d("FestiveDCS", "ESTADO NORMAL => DOWNLOADS OK!");
+              //Buffering State
+              Chunk nextMediaChunk = newMediaChunk(representationHolder, dataSource, segmentNum,
+                      evaluation.trigger);
+              lastChunkWasInitialization = false;
+              out.chunk = nextMediaChunk;
+
+              Log.d("FestiveDCS", "Download normal.\nSegmentNum = " + segmentNum);
+            }
+            else {
+              Log.d("FestiveDCS", "INICIANDO DELAY");
+              long randomDelay = (new Random().nextLong() % DELTA) * 2 / 1000;
+              if(randomDelay < 0)
+                randomDelay *= -1;
+              DELAYING = time + randomDelay;
+              IS_DELAYING = true;
+              Log.d("FestiveDCS", "Atrasarei " + randomDelay + "ms");
+              //Para debug
+              threadKilled = 0;
+            }
+          }
   }
 
   @Override

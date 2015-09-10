@@ -24,7 +24,6 @@ import com.google.android.exoplayer.VideoSurfaceView;
 import com.google.android.exoplayer.chunk.ChunkSampleSource;
 import com.google.android.exoplayer.chunk.ChunkSource;
 import com.google.android.exoplayer.chunk.FormatEvaluator;
-import com.google.android.exoplayer.dash.DashChunkSource;
 import com.google.android.exoplayer.dash.mpd.MediaPresentationDescription;
 import com.google.android.exoplayer.dash.mpd.MediaPresentationDescriptionParser;
 import com.google.android.exoplayer.dash.mpd.Representation;
@@ -38,6 +37,7 @@ import com.google.android.exoplayer.util.ManifestFetcher;
 import com.promobile.vod.vodmobile.vodplayer.evaluator.AdaptechEvaluator;
 import com.promobile.vod.vodmobile.vodplayer.evaluator.FestiveEvaluator;
 import com.promobile.vod.vodmobile.vodplayer.evaluator.chunkSource.AdapTechDashChunkSource;
+import com.promobile.vod.vodmobile.vodplayer.evaluator.chunkSource.FestiveDashChunkSource;
 import com.promobile.vod.vodmobile.vodplayer.mpd.MpdManager;
 
 import java.io.IOException;
@@ -277,8 +277,8 @@ public class VodPlayer {
                     audioChunkSource = new AdapTechDashChunkSource(audioDataSource, formatEvaluator, audioRepresentationList);
                 }
                 else {
-                    chunkSource = new DashChunkSource(videoDataSource, formatEvaluator, videoRepresentationList);
-                    audioChunkSource = new DashChunkSource(audioDataSource, formatEvaluator, audioRepresentationList);
+                    chunkSource = new FestiveDashChunkSource(videoDataSource, formatEvaluator, videoRepresentationList);
+                    audioChunkSource = new FestiveDashChunkSource(audioDataSource, formatEvaluator, audioRepresentationList);
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Erro em DashChunckSource: " + e.getLocalizedMessage() + " | " + e.getMessage());
