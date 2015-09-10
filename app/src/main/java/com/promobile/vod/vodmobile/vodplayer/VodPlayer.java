@@ -62,7 +62,7 @@ public class VodPlayer {
     private final String TAG = "VodPlayer";
     private boolean debugMode = true;
 
-    public static final int DEFAULT_BUFFER_SEGMENT_SIZE = 64 * 1024;
+    public static final int DEFAULT_BUFFER_SEGMENT_SIZE = 32 * 1024;
     private static final int DEFAULT_VIDEO_BUFFER_SEGMENTS = 200;
 
     public static final int MINIMAL_MODE = 0;
@@ -238,7 +238,7 @@ public class VodPlayer {
             formatEvaluator = new AdaptechEvaluator(bandwidthMeter);
         }
         else if(evaluationMode == FESTIVE_EVALUATOR) {
-            formatEvaluator = new FestiveEvaluator();
+            formatEvaluator = new FestiveEvaluator(bandwidthMeter);
         }
 
         manifestFetcher = new ManifestFetcher<MediaPresentationDescription>(new MediaPresentationDescriptionParser(), "VodPlayer", mdpUrl, userAgent);

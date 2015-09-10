@@ -385,7 +385,7 @@ public class AdapTechDashChunkSource implements ChunkSource {
 
       /**
        *
-       * Este trecho faz download apenas quando o tamanho de buffer é  menor que trinta
+       * Este trecho faz download apenas quando o tamanho de buffer é  menor que 30 segundos
        *
        */
           long endTime = queue.isEmpty()? 0: queue.get(queue.size() - 1).endTimeUs;

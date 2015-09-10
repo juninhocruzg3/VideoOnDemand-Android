@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.android.exoplayer.dash;
+package com.promobile.vod.vodmobile.vodplayer.evaluator.chunkSource;
 
 import android.net.Uri;
 import android.os.SystemClock;
@@ -36,6 +36,8 @@ import com.google.android.exoplayer.chunk.SingleSampleMediaChunk;
 import com.google.android.exoplayer.chunk.parser.Extractor;
 import com.google.android.exoplayer.chunk.parser.mp4.FragmentedMp4Extractor;
 import com.google.android.exoplayer.chunk.parser.webm.WebmExtractor;
+import com.google.android.exoplayer.dash.DashSegmentIndex;
+import com.google.android.exoplayer.dash.DashWrappingSegmentIndex;
 import com.google.android.exoplayer.dash.mpd.AdaptationSet;
 import com.google.android.exoplayer.dash.mpd.ContentProtection;
 import com.google.android.exoplayer.dash.mpd.MediaPresentationDescription;
@@ -62,7 +64,7 @@ import java.util.UUID;
  * <p>
  * This implementation currently supports fMP4, webm, and webvtt.
  */
-public class DashChunkSource implements ChunkSource {
+public class FestiveDashChunkSource implements ChunkSource {
 
   /**
    * Thrown when an AdaptationSet is missing from the MPD.
@@ -110,8 +112,8 @@ public class DashChunkSource implements ChunkSource {
    * @param formatEvaluator Selects from the available formats.
    * @param representations The representations to be considered by the source.
    */
-  public DashChunkSource(DataSource dataSource, FormatEvaluator formatEvaluator,
-      Representation... representations) {
+  public FestiveDashChunkSource(DataSource dataSource, FormatEvaluator formatEvaluator,
+                                Representation... representations) {
     this(buildManifest(Arrays.asList(representations)), 0, null, dataSource, formatEvaluator);
   }
 
@@ -122,8 +124,8 @@ public class DashChunkSource implements ChunkSource {
    * @param formatEvaluator Selects from the available formats.
    * @param representations The representations to be considered by the source.
    */
-  public DashChunkSource(DataSource dataSource, FormatEvaluator formatEvaluator,
-      List<Representation> representations) {
+  public FestiveDashChunkSource(DataSource dataSource, FormatEvaluator formatEvaluator,
+                                List<Representation> representations) {
     this(buildManifest(representations), 0, null, dataSource, formatEvaluator);
   }
 
@@ -138,8 +140,8 @@ public class DashChunkSource implements ChunkSource {
    * @param dataSource A {@link DataSource} suitable for loading the media data.
    * @param formatEvaluator Selects from the available formats.
    */
-  public DashChunkSource(MediaPresentationDescription manifest, int adaptationSetIndex,
-      int[] representationIndices, DataSource dataSource, FormatEvaluator formatEvaluator) {
+  public FestiveDashChunkSource(MediaPresentationDescription manifest, int adaptationSetIndex,
+                                int[] representationIndices, DataSource dataSource, FormatEvaluator formatEvaluator) {
     this(null, manifest, adaptationSetIndex, representationIndices, dataSource, formatEvaluator, 0);
   }
 
@@ -163,17 +165,17 @@ public class DashChunkSource implements ChunkSource {
    *     note that the value sets an upper bound on the length of media that the player can buffer.
    *     Hence a small value may increase the probability of rebuffering and playback failures.
    */
-  public DashChunkSource(ManifestFetcher<MediaPresentationDescription> manifestFetcher,
-      int adaptationSetIndex, int[] representationIndices, DataSource dataSource,
-      FormatEvaluator formatEvaluator, long liveEdgeLatencyMs) {
+  public FestiveDashChunkSource(ManifestFetcher<MediaPresentationDescription> manifestFetcher,
+                                int adaptationSetIndex, int[] representationIndices, DataSource dataSource,
+                                FormatEvaluator formatEvaluator, long liveEdgeLatencyMs) {
     this(manifestFetcher, manifestFetcher.getManifest(), adaptationSetIndex, representationIndices,
         dataSource, formatEvaluator, liveEdgeLatencyMs * 1000);
   }
 
-  private DashChunkSource(ManifestFetcher<MediaPresentationDescription> manifestFetcher,
-      MediaPresentationDescription initialManifest, int adaptationSetIndex,
-      int[] representationIndices, DataSource dataSource, FormatEvaluator formatEvaluator,
-      long liveEdgeLatencyUs) {
+  private FestiveDashChunkSource(ManifestFetcher<MediaPresentationDescription> manifestFetcher,
+                                 MediaPresentationDescription initialManifest, int adaptationSetIndex,
+                                 int[] representationIndices, DataSource dataSource, FormatEvaluator formatEvaluator,
+                                 long liveEdgeLatencyUs) {
     this.manifestFetcher = manifestFetcher;
     this.currentManifest = initialManifest;
     this.adaptationSetIndex = adaptationSetIndex;
@@ -245,8 +247,8 @@ public class DashChunkSource implements ChunkSource {
 
     MediaPresentationDescription newManifest = manifestFetcher.getManifest();
     if (currentManifest != newManifest && newManifest != null) {
-      Representation[] newRepresentations = DashChunkSource.getFilteredRepresentations(newManifest,
-          adaptationSetIndex, representationIndices);
+      Representation[] newRepresentations = FestiveDashChunkSource.getFilteredRepresentations(newManifest,
+              adaptationSetIndex, representationIndices);
       for (Representation representation : newRepresentations) {
         RepresentationHolder representationHolder =
             representationHolders.get(representation.format.id);
