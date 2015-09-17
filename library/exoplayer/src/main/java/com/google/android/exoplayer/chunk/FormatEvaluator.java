@@ -72,8 +72,7 @@ public interface FormatEvaluator {
    * @param evaluation The evaluation.
    */
   // TODO: Pass more useful information into this method, and finalize the interface.
-  void evaluate(List<? extends MediaChunk> queue, long playbackPositionUs, Format[] formats,
-      Evaluation evaluation);
+  void evaluate(List<? extends MediaChunk> queue, long playbackPositionUs, Format[] formats, Evaluation evaluation);
 
   /**
    * A format evaluation.

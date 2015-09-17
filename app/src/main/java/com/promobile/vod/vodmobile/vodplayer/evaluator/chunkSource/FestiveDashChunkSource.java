@@ -73,6 +73,8 @@ public class FestiveDashChunkSource implements ChunkSource {
   public static boolean IS_DELAYING;
   public static int threadKilled;
 
+  public static final int DEFAULT_BUFFER_TIME = 30000000;
+
   /**
    * Thrown when an AdaptationSet is missing from the MPD.
    */
@@ -287,12 +289,80 @@ public class FestiveDashChunkSource implements ChunkSource {
   }
 
   @Override
-  public final void getChunkOperation(List<? extends MediaChunk> queue, long seekPositionUs,
-      long playbackPositionUs, ChunkOperationHolder out) {
+  public final void getChunkOperation(List<? extends MediaChunk> queue, long seekPositionUs, long playbackPositionUs, ChunkOperationHolder out) {
     if (fatalError != null) {
       out.chunk = null;
       return;
     }
+
+
+
+    /**
+     *
+     * Este trecho atrasa o download de chunks aleatóriamente quando o buffer ultrapassa 30s+DELTA
+     *
+     */
+    long bufferEndTime = queue.isEmpty()? 0: queue.get(queue.size() - 1).endTimeUs;
+    long bufferTotalTime = bufferEndTime > 0? bufferEndTime - playbackPositionUs:0;
+    long systemTime = Calendar.getInstance().getTimeInMillis();
+
+
+    if(DELTA == 0) {
+      DELTA = queue.isEmpty()? 0: bufferEndTime - queue.get(queue.size() - 1).startTimeUs;
+    }
+
+    if(IS_DELAYING) {
+      Log.d("FestiveDCS", "IS DELAYNG");
+      //verificar se o atraso já encerrou
+      if(DELAYING < systemTime) {
+        IS_DELAYING = false;
+      }
+      //Para debug
+      Log.d("FestiveDCS", "Matei " + (++threadKilled) + " thread.");
+
+      //Retorna sem fazer download.
+      Log.d("FestiveDCS", "TEmpo:\nTime = " + systemTime + "\nDelay até = " + DELAYING);
+      return;
+    }
+    else {
+      //Não está atrasando...
+      if (bufferTotalTime < DEFAULT_BUFFER_TIME - DELTA) {
+        Log.d("FestiveDCS", "ESTADO NORMAL => DOWNLOADS OK!");
+        //Buffering State
+
+        //No evaluation. Download normal.
+
+        Log.d("FestiveDCS", "Download normal.\nSegue para DashChunkSource");
+      }
+      else {
+        Log.d("FestiveDCS", "VERIFICANDO NECESSIDADE DE DELAY");
+        long randomDelay = (new Random().nextLong() % DELTA);
+        Log.i("FestiveDCS", "Situação:\nRandomTime: " + (DEFAULT_BUFFER_TIME + randomDelay) + "\nBufferTime: " + bufferTotalTime);
+        if((DEFAULT_BUFFER_TIME + randomDelay) < bufferTotalTime) {
+          //Buffer cheio. Delaying será ativo.
+          DELAYING = systemTime + (bufferTotalTime/1000) - (DEFAULT_BUFFER_TIME/1000) - (randomDelay/1000);
+          IS_DELAYING = true;
+          Log.d("FestiveDCS", "Atrasarei " + ((bufferTotalTime/1000) - (DEFAULT_BUFFER_TIME/1000) - (randomDelay/1000)) + "ms");
+          //Para debug
+          threadKilled = 0;
+
+          //Retorna sem fazer download.
+          return;
+        }
+        else {
+
+
+          Log.d("FestiveDCS", "Download normal.\nSegue para DashChunkSource");
+        }
+      }
+    }
+
+
+    /**
+     *
+     * Aqui continua o DashChunkSource Original
+     *
+     */
 
     evaluation.queueSize = queue.size();
     if (evaluation.format == null || !lastChunkWasInitialization) {
@@ -389,54 +459,10 @@ public class FestiveDashChunkSource implements ChunkSource {
       return;
     }
 
-
-      /**
-       *
-       * Este trecho atrasa o download de chunks aleatóriamente quando o buffer ultrapassa 30s+DELTA
-       *
-       */
-          long endTime = queue.isEmpty()? 0: queue.get(queue.size() - 1).endTimeUs;
-          long bufferTime = endTime > 0? endTime - playbackPositionUs:0;
-          long time = Calendar.getInstance().getTimeInMillis();
-
-          if(DELTA == 0) {
-            DELTA = queue.isEmpty()? 0: endTime - queue.get(queue.size() - 1).startTimeUs;
-          }
-
-          if(IS_DELAYING) {
-            Log.d("FestiveDCS", "IS DELAYNG");
-              //verificar se o atraso já encerrou
-              if(DELAYING < time) {
-                IS_DELAYING = false;
-              }
-            //Para debug
-            Log.d("FestiveDCS", "Matei " + (++threadKilled) + " thread.");
-
-          }
-          else {
-              //Não está atrasando...
-            if (bufferTime < 30000000 + DELTA) {
-              Log.d("FestiveDCS", "ESTADO NORMAL => DOWNLOADS OK!");
-              //Buffering State
-              Chunk nextMediaChunk = newMediaChunk(representationHolder, dataSource, segmentNum,
-                      evaluation.trigger);
-              lastChunkWasInitialization = false;
-              out.chunk = nextMediaChunk;
-
-              Log.d("FestiveDCS", "Download normal.\nSegmentNum = " + segmentNum);
-            }
-            else {
-              Log.d("FestiveDCS", "INICIANDO DELAY");
-              long randomDelay = (new Random().nextLong() % DELTA) * 2 / 1000;
-              if(randomDelay < 0)
-                randomDelay *= -1;
-              DELAYING = time + randomDelay;
-              IS_DELAYING = true;
-              Log.d("FestiveDCS", "Atrasarei " + randomDelay + "ms");
-              //Para debug
-              threadKilled = 0;
-            }
-          }
+    Chunk nextMediaChunk = newMediaChunk(representationHolder, dataSource, segmentNum,
+            evaluation.trigger);
+    lastChunkWasInitialization = false;
+    out.chunk = nextMediaChunk;
   }
 
   @Override

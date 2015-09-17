@@ -26,7 +26,6 @@ public class FestiveEvaluator implements FormatEvaluator {
     private static final int DOWNLOADS_BASE = 20;
 
     private int state;
-    private int canIncremment;
 
     private BandwidthMeter bandwidthMeter;
     private ArrayList<HistoricChunk> historicChunkList;
@@ -34,6 +33,9 @@ public class FestiveEvaluator implements FormatEvaluator {
     private Format[] formats;
     private double bitrateReference;
     private double bitrateCompare;
+
+    private boolean canIncrease;
+    private int numberToChangeCanIncrease;
 
     public FestiveEvaluator(BandwidthMeter bandwidthMeter) {
         super();
@@ -81,7 +83,7 @@ public class FestiveEvaluator implements FormatEvaluator {
         //À princípio, considera-se a qualidade atual como a ideal.
         Format ideal = current;
 
-        double bitrateEstimate = bandwidthMeter.getBitrateEstimate();
+        double bitrateEstimate = bandwidthMeter.getBitrateEstimate(); //Dado do último chunk baixado: Chunk (Em bytes) / Tempo (Em segundos) => b/s
 
         if(bitrateEstimate != -1) {
             if (isVideo) {
@@ -97,21 +99,21 @@ public class FestiveEvaluator implements FormatEvaluator {
                     historicChunk.nextChunkIndex = lastChunkDownloaded.nextChunkIndex;
                     historicChunk.bitrateEstimate = bitrateEstimate;
                     historicChunk.time = Calendar.getInstance().getTimeInMillis();
-                    historicChunk.bitrateDownloaded = current.id;
+                    historicChunk.bitrateDownloaded = current.id;  //Qualidade em que o Chunk foi baixado.
 
                     historicChunkList.add(historicChunk);
 
                     /**
                      * Gerando Log para debug... Está comentado por causa do atraso na reprodução.
                      */
-//                    String log = "";
+                    String log = "Quantidade de chunks baixados"+historicChunkList.size();
 //
 //                    for (int i = 0; i < historicChunkList.size(); i++) {
 //                        String chunkLog = "[" + i + "]\n" + historicChunkList.get(i).toString() + "\n\n";
 //                        log += chunkLog;
 //                    }
 //
-//                    Log.i(TAG, log);
+                    Log.i(TAG, log);
 
 
                     /**
@@ -132,31 +134,46 @@ public class FestiveEvaluator implements FormatEvaluator {
                             Log.d(TAG, "decrementando...");
                             if(canDecrease(current, formats)) {
                                 ideal = decrease(current, formats);
-                                Log.d(TAG, "Qualidade mínima. Impossível decrementar.");
+                                numberToChangeCanIncrease = formats.length - identifyFormat(ideal, formats);
+                                canIncrease = false;
+                                Log.i(TAG, "Esperar para incremento: " + numberToChangeCanIncrease);
+                            }
+                        }
+                        else if(canIncrease) {
+                            Log.d(TAG, "Incrementando...");
+                            bitrateReference = getNextHigher(bitrateCurrent);
+
+                            Log.d(TAG, "Bitrate referencia encontrado: " + bitrateReference);
+
+                            double scoreReference = getTotalScore(bitrateReference) + 1;
+                            double scoreCurrent = getTotalScore(bitrateCurrent);
+
+                            Log.d(TAG, "Scores obtidos");
+
+                            Log.i(TAG, "Score:\nReference = " + scoreReference + "\nCurrent = " + scoreCurrent);
+
+                            if (scoreReference < scoreCurrent) {
+                                /**
+                                 * Formato alterado para Bitrate referencia.
+                                 */
+                                ideal = increase(current, formats);
+                                int formatPosition = identifyFormat(ideal, formats);
+
+                                numberToChangeCanIncrease = (formatPosition == 0) ? 0 : formats.length - formatPosition;
+
+                                canIncrease = false;
+                            } else {
+                                ideal = current;
                             }
                         }
                         else {
-                            Log.d(TAG, "Incrementando...");
-                            if(canIncrease(current, formats)) {
-                                bitrateReference = getNextHigher(bitrateCurrent);
-
-                                Log.d(TAG, "Bitrate referencia encontrado: " + bitrateReference);
-
-                                double scoreReference = getTotalScore(bitrateReference) + 1;
-                                double scoreCurrent = getTotalScore(bitrateCurrent);
-
-                                Log.d(TAG, "Scores obtidos");
-
-                                Log.i(TAG, "Score:\nReference = " + scoreReference + "\nCurrent = " + scoreCurrent);
-
-                                if (scoreReference < scoreCurrent) {
-                                    /**
-                                     * Formato alterado para Bitrate referencia.
-                                     */
-                                    ideal = increase(current, formats);
-                                } else {
-                                    ideal = current;
-                                }
+                            if(numberToChangeCanIncrease > 1) {
+                                numberToChangeCanIncrease--;
+                                canIncrease = false;
+                            }
+                            else if(numberToChangeCanIncrease == 1) {
+                                numberToChangeCanIncrease--;
+                                canIncrease = true;
                             }
                         }
                     }
@@ -170,6 +187,8 @@ public class FestiveEvaluator implements FormatEvaluator {
                         }
                         else {
                             state = STATE_STEADY;
+                            canIncrease = true;
+                            numberToChangeCanIncrease = 0;
                         }
                     }
                 }
@@ -178,7 +197,7 @@ public class FestiveEvaluator implements FormatEvaluator {
 
         evaluation.format = ideal;
 
-        Log.i(TAG, "Avaliação encerrada: idealFormat: " + ideal.id);
+        Log.i(TAG, "Avaliação encerrada: idealFormat: " + identifyFormat(ideal, formats));
     }
 
     /**
