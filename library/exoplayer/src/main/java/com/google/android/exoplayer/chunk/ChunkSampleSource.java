@@ -17,6 +17,7 @@ package com.google.android.exoplayer.chunk;
 
 import android.os.Handler;
 import android.os.SystemClock;
+import android.util.Log;
 
 import com.google.android.exoplayer.C;
 import com.google.android.exoplayer.LoadControl;
@@ -560,6 +561,7 @@ public class ChunkSampleSource implements SampleSource, Loader.Callback {
         loadingOrBackedOff, false);
 
     if (isBackedOff) {
+      Log.i ("Vod Debug", "Is Backed Off");
       long elapsedMillis = now - currentLoadableExceptionTimestamp;
       if (elapsedMillis >= getRetryDelayMillis(currentLoadableExceptionCount)) {
         resumeFromBackOff();
@@ -568,6 +570,7 @@ public class ChunkSampleSource implements SampleSource, Loader.Callback {
     }
 
     if (!loader.isLoading() && nextLoader) {
+      Log.i ("Vod Debug", "maybe Start Loading");
       maybeStartLoading();
     }
   }

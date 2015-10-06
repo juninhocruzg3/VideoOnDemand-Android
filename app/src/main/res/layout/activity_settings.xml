@@ -25,6 +25,11 @@
         <RadioButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="@string/evaluator_default"
+            android:id="@+id/radioBtn_default"/>
+        <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="@string/evaluator_adaptech"
             android:id="@+id/radioBtn_adaptech" />
 

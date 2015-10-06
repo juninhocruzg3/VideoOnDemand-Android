@@ -15,10 +15,11 @@
  */
 package com.google.android.exoplayer;
 
+import android.os.Handler;
+import android.util.Log;
+
 import com.google.android.exoplayer.upstream.Allocator;
 import com.google.android.exoplayer.upstream.NetworkLock;
-
-import android.os.Handler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -55,8 +56,8 @@ public class DefaultLoadControl implements LoadControl {
 
   }
 
-  public static final int DEFAULT_LOW_WATERMARK_MS = 15000;
-  public static final int DEFAULT_HIGH_WATERMARK_MS = 30000;
+  public static final int DEFAULT_LOW_WATERMARK_MS = 30000;
+  public static final int DEFAULT_HIGH_WATERMARK_MS = 60000;
   public static final float DEFAULT_LOW_POOL_LOAD = 0.2f;
   public static final float DEFAULT_HIGH_POOL_LOAD = 0.8f;
 
@@ -165,6 +166,9 @@ public class DefaultLoadControl implements LoadControl {
       boolean loading, boolean failed) {
     // Update the loader state.
     int loaderBufferState = getLoaderBufferState(playbackPositionUs, nextLoadPositionUs);
+
+    Log.i("Vod Debug", "LoaderBufferState = " + loaderBufferState);
+
     LoaderState loaderState = loaderStates.get(loader);
     boolean loaderStateChanged = loaderState.bufferState != loaderBufferState
         || loaderState.nextLoadPositionUs != nextLoadPositionUs || loaderState.loading != loading
@@ -179,6 +183,9 @@ public class DefaultLoadControl implements LoadControl {
     // Update the buffer pool state.
     int allocatedSize = allocator.getAllocatedSize();
     int bufferPoolState = getBufferPoolState(allocatedSize);
+
+    Log.i("Vod Debug", "BufferPoolState = " + bufferPoolState);
+
     boolean bufferPoolStateChanged = this.bufferPoolState != bufferPoolState;
     if (bufferPoolStateChanged) {
       this.bufferPoolState = bufferPoolState;

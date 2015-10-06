@@ -2,6 +2,8 @@ package com.promobile.vod.vodmobile.activities;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -47,6 +49,14 @@ public class VodPlayerActivity extends Activity {
         init();
 
         buildDashVodPlayer();
+
+        MediaPlayer mediaPlayer = new MediaPlayer();
+        try {
+            mediaPlayer.setDataSource(getApplication(), Uri.parse("http://adasjdhsk"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        mediaPlayer.start();
     }
 
     /**

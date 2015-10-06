@@ -24,6 +24,7 @@ import com.google.android.exoplayer.VideoSurfaceView;
 import com.google.android.exoplayer.chunk.ChunkSampleSource;
 import com.google.android.exoplayer.chunk.ChunkSource;
 import com.google.android.exoplayer.chunk.FormatEvaluator;
+import com.google.android.exoplayer.dash.DashChunkSource;
 import com.google.android.exoplayer.dash.mpd.MediaPresentationDescription;
 import com.google.android.exoplayer.dash.mpd.MediaPresentationDescriptionParser;
 import com.google.android.exoplayer.dash.mpd.Representation;
@@ -39,7 +40,6 @@ import com.promobile.vod.vodmobile.vodplayer.evaluator.FestiveEvaluator;
 import com.promobile.vod.vodmobile.vodplayer.evaluator.chunkSource.AdapTechDashChunkSource;
 import com.promobile.vod.vodmobile.vodplayer.evaluator.chunkSource.FestiveDashChunkSource;
 import com.promobile.vod.vodmobile.vodplayer.mpd.MpdManager;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -78,6 +78,7 @@ public class VodPlayer {
 
     public static final int ADAPTECH_EVALUATOR = 0;
     public static final int FESTIVE_EVALUATOR = 1;
+    public static final int DEFAULT_EVALUATOR = 2;
 
     private Context context;
 
@@ -239,6 +240,8 @@ public class VodPlayer {
         }
         else if(evaluationMode == FESTIVE_EVALUATOR) {
             formatEvaluator = new FestiveEvaluator(bandwidthMeter);
+        } else if(evaluationMode == DEFAULT_EVALUATOR) {
+            formatEvaluator = new FormatEvaluator.AdaptiveEvaluator(bandwidthMeter);
         }
 
         manifestFetcher = new ManifestFetcher<MediaPresentationDescription>(new MediaPresentationDescriptionParser(), "VodPlayer", mdpUrl, userAgent);
@@ -276,9 +279,12 @@ public class VodPlayer {
                     chunkSource = new AdapTechDashChunkSource(videoDataSource, formatEvaluator, videoRepresentationList);
                     audioChunkSource = new AdapTechDashChunkSource(audioDataSource, formatEvaluator, audioRepresentationList);
                 }
-                else {
+                else if (evaluationMode == FESTIVE_EVALUATOR){
                     chunkSource = new FestiveDashChunkSource(videoDataSource, formatEvaluator, videoRepresentationList);
                     audioChunkSource = new FestiveDashChunkSource(audioDataSource, formatEvaluator, audioRepresentationList);
+                } else if (evaluationMode == DEFAULT_EVALUATOR) {
+                    chunkSource = new DashChunkSource(videoDataSource, formatEvaluator, videoRepresentationList);
+                    audioChunkSource = new DashChunkSource(audioDataSource, formatEvaluator, audioRepresentationList);
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Erro em DashChunckSource: " + e.getLocalizedMessage() + " | " + e.getMessage());
