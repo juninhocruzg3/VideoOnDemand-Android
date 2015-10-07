@@ -119,7 +119,22 @@ public class MainActivity extends AppCompatActivity
          * number.
          */
         public static PlaceholderFragment newInstance(int sectionNumber) {
-            PlaceholderFragment fragment = new PlaceholderFragment();
+            PlaceholderFragment fragment = null;
+            switch (sectionNumber) {
+                case 1:
+                    fragment = new HomeFragment();
+                    break;
+                case 2:
+                    fragment = new ChannelFragment();
+                    break;
+                case 3:
+                    fragment = new SearchFragment();
+                    break;
+                default:
+                    fragment = new PlaceholderFragment();
+                    break;
+            }
+
             PlaceholderFragment.sectionNumber = sectionNumber;
             Bundle args = new Bundle();
             args.putInt(ARG_SECTION_NUMBER, sectionNumber);
@@ -133,18 +148,8 @@ public class MainActivity extends AppCompatActivity
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            View rootView = null;
-            switch (PlaceholderFragment.sectionNumber) {
-                case 1:
-                    rootView = inflater.inflate(R.layout.fragment_home, container, false);
-                    break;
-                case 2:
-                    rootView = inflater.inflate(R.layout.fragment_channel, container, false);
-                    break;
-                case 3:
-                    rootView = inflater.inflate(R.layout.fragment_search, container, false);
-                    break;
-            }
+            View rootView = inflater.inflate(R.layout.fragment_void, container, false);
+
             return rootView;
         }
 
