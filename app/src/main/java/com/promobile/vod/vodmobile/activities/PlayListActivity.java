@@ -10,14 +10,24 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.promobile.vod.vodmobile.R;
 import com.promobile.vod.vodmobile.adapter.VideoListAdapter;
 import com.promobile.vod.vodmobile.model.Video;
 import com.promobile.vod.vodmobile.util.LocalStorage;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import br.ufam.icomp.fingerprinting.VolleyController;
 
 
 public class PlayListActivity extends ActionBarActivity {
@@ -35,7 +45,34 @@ public class PlayListActivity extends ActionBarActivity {
     private void init() {
         initializeProgressDialog();
         initializeListView();
+        sendRequestPlayList();
         finalizeProgressDialog();
+    }
+
+    private void sendRequestPlayList() {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("name", "João");
+            jsonObject.put("message", "Olá!");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, "http://vod.icomp.ufam.edu.br/vod_mobile/webservice", jsonObject, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Toast.makeText(getApplicationContext(), "Resposta: " + response.toString(), Toast.LENGTH_LONG).show();
+                Log.d("Request", response.toString());
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(getApplicationContext(), "Erro: " + error.getLocalizedMessage() + "\n" + error.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+
+        VolleyController.getInstance().addToRequestQueue(jsonObjectRequest);
     }
 
     private void initializeListView() {

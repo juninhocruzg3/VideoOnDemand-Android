@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.promobile.vod.vodmobile.R;
+import com.promobile.vod.vodmobile.activities.navigation.MainActivity;
 import com.promobile.vod.vodmobile.connection.VolleyManager;
 import com.promobile.vod.vodmobile.util.LocalStorage;
 import com.promobile.vod.vodmobile.vodplayer.VodPlayer;
@@ -58,7 +59,7 @@ public class SplashActivity extends Activity {
                     Toast.makeText(getApplicationContext(), error, Toast.LENGTH_LONG).show();
                     Log.e("FingerPrinting", error);
 
-                    Intent intent = new Intent(SplashActivity.this, VideoListActivity.class);
+                    Intent intent = new Intent(SplashActivity.this, MainActivity.class);
                     startActivity(intent);
                     finish();
                 }
@@ -70,7 +71,7 @@ public class SplashActivity extends Activity {
         fingerprinting.sendFingerprinting(getApplicationContext(), data);
         pDialog.hide();
 
-        Intent intent = new Intent(this, VideoListActivity.class);
+        Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
         finish();
     }
