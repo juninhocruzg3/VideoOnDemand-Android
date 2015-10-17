@@ -29,7 +29,13 @@ public class LocalStorage {
      */
     public static final String FORMAT_SELECTED = "format_selected";
 
+    /**
+     * Type: {@link com.promobile.vod.vodmobile.model.Video}
+     */
+    public static final String OBJ_VIDEO = "obj_video";
+
     private static final String SETTINGS = "settings";
+
 
 
     public static LocalStorage localStorage;

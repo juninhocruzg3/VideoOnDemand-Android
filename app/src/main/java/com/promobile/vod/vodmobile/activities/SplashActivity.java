@@ -4,19 +4,16 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.promobile.vod.vodmobile.R;
 import com.promobile.vod.vodmobile.activities.navigation.MainActivity;
-import com.promobile.vod.vodmobile.connection.VolleyManager;
 import com.promobile.vod.vodmobile.util.LocalStorage;
 import com.promobile.vod.vodmobile.vodplayer.VodPlayer;
 
-import br.ufam.icomp.fingerprinting.Fingerprinting;
+import com.promobile.vod.vodmobile.util.Fingerprinting;
 
 public class SplashActivity extends Activity {
     private ProgressDialog pDialog;
@@ -40,7 +37,7 @@ public class SplashActivity extends Activity {
         pDialog.setCancelable(false);
         pDialog.show();
 
-        fingerprinting = new Fingerprinting(this);
+        fingerprinting = new Fingerprinting(getApplication());
 
         fingerprinting.setListener(new Fingerprinting.Listener() {
             @Override
@@ -49,27 +46,14 @@ public class SplashActivity extends Activity {
             }
         });
 
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    fingerprinting.doFingerprinting();
-                } catch(Exception e) {
-                    String error = "Erro no fingerprint:\n" + e.getLocalizedMessage() + "\n" + e.getMessage();
-                    Toast.makeText(getApplicationContext(), error, Toast.LENGTH_LONG).show();
-                    Log.e("FingerPrinting", error);
-
-                    Intent intent = new Intent(SplashActivity.this, MainActivity.class);
-                    startActivity(intent);
-                    finish();
-                }
-            }
-        }, 3000);
+        fingerprinting.doFingerprinting();
     }
 
     private void onFingerPrintingFinish(String data) {
-        fingerprinting.sendFingerprinting(getApplicationContext(), data);
+        fingerprinting.sendFingerprinting(data);
         pDialog.hide();
+
+        Log.d("SplashAct.onFin...", data);
 
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
@@ -103,8 +87,8 @@ public class SplashActivity extends Activity {
     protected void onStop() {
         super.onStop();
 
-        if(VolleyManager.hasInstance()) {
-            VolleyManager.getInstance(getApplicationContext()).killRequests("fingerprint");
-        }
+//        if(VolleyManager.hasInstance()) {
+//            VolleyManager.getInstance(getApplicationContext()).killRequests("fingerprint");
+//        }
     }
 }

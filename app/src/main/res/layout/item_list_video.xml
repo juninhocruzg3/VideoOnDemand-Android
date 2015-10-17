@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
@@ -9,43 +9,51 @@
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="150dp"
-        android:id="@+id/image_video"
+        android:id="@+id/item_image_video"
         android:src="@mipmap/vod_logo"
-        android:layout_alignParentTop="true"
-        android:layout_centerInParent="true"
         android:contentDescription="@string/app_name"/>
 
-    <RelativeLayout
+    <TextView
         android:layout_width="match_parent"
-        android:layout_height="120dp"
-        android:id="@+id/relative_layout"
-        android:background="@color/black_transparent"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/black"
+        android:textSize="20sp"
+        android:text="@string/title"
+        android:id="@+id/item_title_video"
+        android:gravity="center_horizontal"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/black"
+        android:textSize="16sp"
+        android:text="@string/duration_default"
+        android:id="@+id/item_duration_video"
         android:gravity="center_horizontal"
-        android:layout_alignParentTop="true"
-        android:layout_centerInParent="true"
-        android:layout_marginTop="17dp"
-        android:layout_marginBottom="17dp">
-        <TextView
-            android:layout_width="match_parent"
+        android:layout_marginBottom="5dp"/>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center">
+
+        <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
-            android:textSize="20sp"
-            android:text="@string/title"
-            android:id="@+id/title_video"
-            android:gravity="center_horizontal"
-            android:layout_above="@+id/duration_video"/>
+            android:text="@string/details"
+            android:id="@+id/item_button_details"
+            android:visibility="gone"/>
 
-        <TextView
-            android:layout_width="match_parent"
+        <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
-            android:textSize="16sp"
-            android:text="@string/duration_default"
-            android:id="@+id/duration_video"
-            android:gravity="center_horizontal"
-            android:layout_alignParentBottom="true"
-            android:layout_marginBottom="5dp"/>
+            android:text="@string/watch"
+            android:id="@+id/item_button_watch"
+            android:visibility="gone"/>
+    </LinearLayout>
 
-    </RelativeLayout>
-
-</RelativeLayout>
+</LinearLayout>

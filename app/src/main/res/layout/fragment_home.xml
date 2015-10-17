@@ -14,4 +14,12 @@
         android:id="@+id/listview_home"
         android:layout_gravity="center_horizontal" />
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="20dp"
+        android:id="@+id/tv_erro_most_popular_list"
+        android:gravity="center"/>
+
 </RelativeLayout>

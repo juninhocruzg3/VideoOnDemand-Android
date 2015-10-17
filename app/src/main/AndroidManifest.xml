@@ -11,7 +11,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
     <application
-        android:name="br.ufam.icomp.fingerprinting.VolleyController"
+        android:name=".connection.VolleyController"
         android:allowBackup="true"
         android:icon="@mipmap/vod_logo"
         android:label="@string/app_name"
@@ -40,15 +40,11 @@
         </activity>
         <activity
             android:name=".activities.SettingsActivity"
-            android:label="@string/title_activity_settings" >
+            android:label="@string/settings" >
         </activity>
         <activity
             android:name=".activities.navigation.MainActivity"
             android:label="@string/app_name" >
-        </activity>
-        <activity
-            android:name=".activities.VideoListActivity"
-            android:label="@string/title_activity_video_list" >
         </activity>
     </application>
 

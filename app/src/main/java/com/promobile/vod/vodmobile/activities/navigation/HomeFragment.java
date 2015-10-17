@@ -9,15 +9,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
 
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageLoader;
 import com.promobile.vod.vodmobile.R;
 import com.promobile.vod.vodmobile.activities.DescriptionActivity;
 import com.promobile.vod.vodmobile.adapter.VideoListAdapter;
+import com.promobile.vod.vodmobile.connection.LruBitmapCache;
+import com.promobile.vod.vodmobile.connection.VodSource;
 import com.promobile.vod.vodmobile.model.Video;
 import com.promobile.vod.vodmobile.util.LocalStorage;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by CRUZ JR, A.C.V. on 06/10/15.
@@ -27,6 +31,14 @@ public class HomeFragment extends MainActivity.PlaceholderFragment {
 
     private ListView listView;
     private ProgressDialog progressDialog;
+    private VodSource vodSource;
+    private VideoListAdapter adapter;
+
+    int i;
+    private TextView tvError;
+    private int thumbDownloadPosition;
+    private ImageLoader imageLoader;
+    private LruBitmapCache lruBitmapCache;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -39,43 +51,89 @@ public class HomeFragment extends MainActivity.PlaceholderFragment {
 
     private void init() {
         initializeProgressDialog();
-        initializeListView();
-        finalizeProgressDialog();
+        initializeVariables();
+        sendRequestVideoList();
     }
 
-    private void initializeListView() {
+    private void sendRequestVideoList() {
+        vodSource.getVideosMostPopular(new VodSource.VideosMostPopularListener() {
+            @Override
+            public void onSucess(ArrayList<Video> arrayList) {
+                if (arrayList != null) {
+                    if(i == 0)
+                        i++;
+                    else
+                        adapter = new VideoListAdapter(rootView.getContext(), arrayList, imageLoader);
+                    listView.setAdapter(adapter);
+
+                    finalizeProgressDialog();
+
+                    if (adapter.isEmpty()) {
+                        onErrorDownloadList();
+                    }
+                    else {
+                        thumbDownloadPosition = 0;
+                        startThumbDownload();
+                    }
+                }
+            }
+
+            @Override
+            public void onError(VolleyError error) {
+                Log.e("HomeFragment", "Erro no download da lista de Vídeos Mais Populares.");
+                onErrorDownloadList();
+            }
+        });
+    }
+
+    private void onErrorDownloadList() {
+        tvError = (TextView) rootView.findViewById(R.id.tv_erro_most_popular_list);
+        tvError.setText(getString(R.string.erro_most_popular_list));
+        tvError.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                initializeProgressDialog();
+                sendRequestVideoList();
+                tvError.setText("");
+            }
+        });
+    }
+
+    private void startThumbDownload() {
+
+    }
+
+
+    private void initializeVariables() {
+        if(vodSource == null)
+            vodSource = VodSource.getInstance();
+
+        lruBitmapCache = new LruBitmapCache();
+
+        imageLoader = new ImageLoader(vodSource.getQueue(), lruBitmapCache);
+
         listView = (ListView) rootView.findViewById(R.id.listview_home);
 
-        Video video1 = new Video(getString(R.string.url_dash_youtube), "Glass - Advertising", 135, R.mipmap.film_google_glass);
-        Video video2 = new Video(getString(R.string.url_dash_2s_vodserver_dataset8), "Sintel - Open Movie", 888, R.mipmap.film_sintel);
+        adapter = new VideoListAdapter(rootView.getContext(), new ArrayList<Video>(), imageLoader);
 
-        ArrayList<Video> list = new ArrayList<>();
-        list.add(video1);
-        list.add(video2);
+        listView.setAdapter(adapter);
 
-        listView.setAdapter(new VideoListAdapter(rootView.getContext(), list));
-
-        listView.setOnItemClickListener(new OnVideoItemClickListener(list));
+        listView.setOnItemClickListener(new OnVideoItemClickListener());
     }
 
     private void initializeProgressDialog() {
-
+        progressDialog = ProgressDialog.show(rootView.getContext(), null, getString(R.string.loading));
+        progressDialog.setCancelable(false);
     }
 
     private void finalizeProgressDialog() {
-
+        progressDialog.dismiss();
     }
 
     private class OnVideoItemClickListener implements android.widget.AdapterView.OnItemClickListener {
-        List<Video> videoList;
-
-        public OnVideoItemClickListener(List<Video> list) {
-            this.videoList = list;
-        }
-
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            LocalStorage.getInstance(rootView.getContext()).addToStorage(LocalStorage.VIDEO_URL, videoList.get(position).getUrl());
+            LocalStorage.getInstance(rootView.getContext()).addToStorage(LocalStorage.VIDEO_URL, adapter.getItem(position).getPath());
             Log.d("PlayListAct", "position: " + position);
             Intent intent = new Intent(rootView.getContext(), DescriptionActivity.class);
             startActivity(intent);

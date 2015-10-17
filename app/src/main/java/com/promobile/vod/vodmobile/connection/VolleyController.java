@@ -1,4 +1,4 @@
-package br.ufam.icomp.fingerprinting;
+package com.promobile.vod.vodmobile.connection;
 
 import android.app.Application;
 import android.text.TextUtils;
@@ -11,7 +11,8 @@ import com.android.volley.toolbox.Volley;
 
 public class VolleyController extends Application {
 
-    public static final String TAG = VolleyController.class.getSimpleName();
+    public static final String TAG = VolleyController.class
+            .getSimpleName();
 
     private RequestQueue mRequestQueue;
     private ImageLoader mImageLoader;

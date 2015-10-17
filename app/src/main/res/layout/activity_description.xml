@@ -74,7 +74,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/text_description"
-                android:text="@string/description_default"
+                android:text="@string/video_description"
                 android:gravity="center" />
 
             <ImageView
