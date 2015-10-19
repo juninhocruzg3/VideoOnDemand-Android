@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -15,8 +16,8 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.promobile.vod.vodmobile.R;
 import com.promobile.vod.vodmobile.activities.DescriptionActivity;
+import com.promobile.vod.vodmobile.activities.VodPlayerActivity;
 import com.promobile.vod.vodmobile.adapter.VideoListAdapter;
-import com.promobile.vod.vodmobile.connection.LruBitmapCache;
 import com.promobile.vod.vodmobile.connection.VodSource;
 import com.promobile.vod.vodmobile.model.Video;
 import com.promobile.vod.vodmobile.util.LocalStorage;
@@ -29,20 +30,18 @@ import java.util.ArrayList;
 public class HomeFragment extends MainActivity.PlaceholderFragment {
     private View rootView;
 
+    private LocalStorage localStorage;
     private ListView listView;
-    private ProgressDialog progressDialog;
+    private static ProgressDialog progressDialog;
     private VodSource vodSource;
     private VideoListAdapter adapter;
-
-    int i;
     private TextView tvError;
-    private int thumbDownloadPosition;
     private ImageLoader imageLoader;
-    private LruBitmapCache lruBitmapCache;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        rootView = inflater.inflate(R.layout.fragment_home, container, false);
+        if(rootView == null)
+            rootView = inflater.inflate(R.layout.fragment_home, container, false);
 
         init();
 
@@ -60,10 +59,7 @@ public class HomeFragment extends MainActivity.PlaceholderFragment {
             @Override
             public void onSucess(ArrayList<Video> arrayList) {
                 if (arrayList != null) {
-                    if(i == 0)
-                        i++;
-                    else
-                        adapter = new VideoListAdapter(rootView.getContext(), arrayList, imageLoader);
+                    adapter = new VideoListAdapter(rootView.getContext(), arrayList, imageLoader);
                     listView.setAdapter(adapter);
 
                     finalizeProgressDialog();
@@ -71,72 +67,92 @@ public class HomeFragment extends MainActivity.PlaceholderFragment {
                     if (adapter.isEmpty()) {
                         onErrorDownloadList();
                     }
-                    else {
-                        thumbDownloadPosition = 0;
-                        startThumbDownload();
-                    }
                 }
             }
 
             @Override
             public void onError(VolleyError error) {
                 Log.e("HomeFragment", "Erro no download da lista de Vídeos Mais Populares.");
+                finalizeProgressDialog();
                 onErrorDownloadList();
             }
         });
     }
 
     private void onErrorDownloadList() {
-        tvError = (TextView) rootView.findViewById(R.id.tv_erro_most_popular_list);
-        tvError.setText(getString(R.string.erro_most_popular_list));
+        tvError.setText(getString(R.string.error_video_list));
         tvError.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 initializeProgressDialog();
                 sendRequestVideoList();
                 tvError.setText("");
+                tvError.setClickable(false);
             }
         });
+        tvError.setClickable(true);
     }
-
-    private void startThumbDownload() {
-
-    }
-
 
     private void initializeVariables() {
+        localStorage = LocalStorage.getInstance(rootView.getContext());
+
         if(vodSource == null)
             vodSource = VodSource.getInstance();
 
-        lruBitmapCache = new LruBitmapCache();
+        imageLoader = vodSource.getImageLoader();
 
-        imageLoader = new ImageLoader(vodSource.getQueue(), lruBitmapCache);
+        tvError = (TextView) rootView.findViewById(R.id.tv_erro_most_popular_list);
+        tvError.setClickable(false);
+        tvError.setText("");
 
         listView = (ListView) rootView.findViewById(R.id.listview_home);
-
-        adapter = new VideoListAdapter(rootView.getContext(), new ArrayList<Video>(), imageLoader);
-
-        listView.setAdapter(adapter);
 
         listView.setOnItemClickListener(new OnVideoItemClickListener());
     }
 
     private void initializeProgressDialog() {
+        finalizeProgressDialog();
         progressDialog = ProgressDialog.show(rootView.getContext(), null, getString(R.string.loading));
         progressDialog.setCancelable(false);
     }
 
     private void finalizeProgressDialog() {
-        progressDialog.dismiss();
+        if(progressDialog != null)
+            progressDialog.dismiss();
     }
 
     private class OnVideoItemClickListener implements android.widget.AdapterView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            LocalStorage.getInstance(rootView.getContext()).addToStorage(LocalStorage.VIDEO_URL, adapter.getItem(position).getPath());
-            Log.d("PlayListAct", "position: " + position);
-            Intent intent = new Intent(rootView.getContext(), DescriptionActivity.class);
-            startActivity(intent);
+            Button btnDetails, btnWatch;
+            final int pposition = position;
+
+            btnDetails = (Button) view.findViewById(R.id.item_button_details);
+            btnWatch = (Button) view.findViewById(R.id.item_button_watch);
+
+
+            if(btnDetails.getVisibility() == View.GONE && btnWatch.getVisibility() == View.GONE) {
+                btnDetails.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        localStorage.addToStorage(LocalStorage.VIDEO_URL, adapter.getItem(pposition).getPath());
+                        localStorage.addToStorage(LocalStorage.OBJ_VIDEO, adapter.getItem(pposition));
+                        Intent intent = new Intent(rootView.getContext(), DescriptionActivity.class);
+                        startActivity(intent);
+                    }
+                });
+                btnWatch.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        localStorage.addToStorage(LocalStorage.VIDEO_URL, adapter.getItem(pposition).getPath());
+                        localStorage.addToStorage(LocalStorage.OBJ_VIDEO, adapter.getItem(pposition));
+                        Intent intent = new Intent(rootView.getContext(), VodPlayerActivity.class);
+                        startActivity(intent);
+                    }
+                });
+            }
+
+            adapter.showVideoOptions(position);
         }
     }
 }

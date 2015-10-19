@@ -1,17 +1,24 @@
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:gravity="center_horizontal"
     android:background="@android:color/background_light"
-    tools:context="com.promobile.vod.vodmobile.activities.PlayListActivity">
+    tools:context="com.promobile.vod.vodmobile.activities.ChannelActivity">
 
     <ListView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/listView"
-        android:layout_gravity="center_horizontal" />
-</LinearLayout>
+        android:id="@+id/listview_playlist"
+        android:layout_gravity="center_horizontal"
+        android:layout_alignParentTop="true"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="20dp"
+        android:id="@+id/tv_erro_play_list"
+        android:gravity="center"/>
+</RelativeLayout>

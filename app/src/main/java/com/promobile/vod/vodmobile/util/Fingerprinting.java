@@ -57,7 +57,7 @@ public class Fingerprinting {
     public Fingerprinting (Context mContext){
         this.context = mContext;
         this.data = new JSONObject();
-        this.urlSendTo = "http://10.208.200.92/vod/fpvod/verifydevice/";
+        this.urlSendTo = "http://10.208.200.92/fpvod/verifydevice/";
         //this.urlSendTo = "http://10.208.200.92/vod_mobile/webservice/";
     }
 
@@ -177,7 +177,7 @@ public class Fingerprinting {
 
                 @Override
                 public void onResponse(String response) {
-                    Log.d("Response: ", response);
+                    Log.d("FP Response: ", response);
 
                 }
             }, new Response.ErrorListener() {

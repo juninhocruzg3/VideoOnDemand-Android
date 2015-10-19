@@ -34,8 +34,12 @@ public class LocalStorage {
      */
     public static final String OBJ_VIDEO = "obj_video";
 
-    private static final String SETTINGS = "settings";
+    /**
+     * Type: {@link com.promobile.vod.vodmobile.model.Channel}
+     */
+    public static final String OBJ_CHANNEL = "obj_channel";
 
+    private static final String SETTINGS = "settings";
 
 
     public static LocalStorage localStorage;

@@ -49,7 +49,10 @@
     <!-- Outros -->
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="erro_most_popular_list">Não foi possível obter a lista de vídeos. Verifique a conexão e clique AQUI para recarregar.</string>
+    <string name="error_video_list">Não foi possível obter a lista de vídeos. Verifique a conexão e clique AQUI para recarregar.</string>
+    <string name="error_channel_list">Não foi possível obter a lista de canais. Verifique a conexão e clique AQUI para recarregar.</string>
+    <string name="uploaded">Postado em: </string>
+    <string name="search">Buscar</string>
 
 
 </resources>

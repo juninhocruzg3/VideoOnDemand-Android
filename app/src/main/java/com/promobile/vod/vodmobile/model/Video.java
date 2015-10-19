@@ -2,14 +2,23 @@ package com.promobile.vod.vodmobile.model;
 
 import android.util.Log;
 
+import com.promobile.vod.vodmobile.R;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * Created by CRUZ JR, A.C.V. on 13/08/15.
- * Esta classe implementa a abstração de um Vídeo
+ * Esta classe implementa a abstração de um Vídeo.
  */
 public class Video {
+    public static final int DEFAULT_IMAGE = R.mipmap.vod_logo;
+    public static final int ERROR_IMAGE = R.mipmap.trash;
+
+
     private String id;
     private double rating;
     private int likeCount;
@@ -18,19 +27,20 @@ public class Video {
     private long duration;
     private int favoriteCount;
     private String title;
-    private String updated;
+    private String uploaded;
     private int viewCount;
     private String tags;
     private String path;
     private String thumb;
     private String description;
     private String url;
+    private Thumbnails thumbnails;
 
     private int image;
 
     public Video(String id, double rating, int likeCount, String commentCount, int ratingCount,
-                        long duration, int favoriteCount, String title, String updated, int viewCount,
-                        String tags, String path, String thumb, String description, String url, int image) {
+                        long duration, int favoriteCount, String title, String uploaded, int viewCount,
+                        String tags, String path, String thumb, String description, String url, Thumbnails thumbnails, int image) {
         this.id = id;
         this.rating = rating;
         this.likeCount = likeCount;
@@ -39,7 +49,7 @@ public class Video {
         this.duration = duration;
         this.favoriteCount = favoriteCount;
         this.title = title;
-        this.updated = updated;
+        this.uploaded = uploaded;
         this.viewCount = viewCount;
         this.tags = tags;
         this.path = path;
@@ -49,10 +59,23 @@ public class Video {
         this.image = image;
     }
 
+    public Video(String title, String description, String path, Thumbnails thumbnails) {
+        this.title = title;
+        this.description = description;
+        this.path = path;
+        this.thumbnails = thumbnails;
+    }
+
+    public Video(String id) {
+        this.id = id;
+    }
+
     public String getFormattedDuration() {
-        long seconds = duration % 60;
-        long minutes = (duration / 60) % 60;
+        long nSeconds = duration % 60;
+        long nMinutes = (duration / 60) % 60;
         long hours = duration / 3600;
+        String seconds = (nSeconds < 10)? "0" + nSeconds : "" + nSeconds;
+        String minutes = (nMinutes < 10 && hours > 0)? "0" + nMinutes : "" + nMinutes;
 
         if(hours > 0) {
             return hours + ":" + minutes + ":" + seconds + "s";
@@ -62,7 +85,25 @@ public class Video {
         }
     }
 
-    public static Video getVideoFromJsonObject(JSONObject jsonObject, int defaultImageId) {
+    public String getFormattedDate() {
+        String formattedDate = "";
+
+        if(uploaded != null) {
+            try{
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+                Date date = dateFormat.parse(uploaded);
+                dateFormat.applyPattern("dd 'de' MMMM 'de' yyyy");
+                formattedDate = dateFormat.format(date);
+            }
+            catch (Exception e) {
+                return "";
+            }
+        }
+
+        return formattedDate;
+    }
+
+    public static Video getVideoFromJsonObject(JSONObject jsonObject) {
         Video video = null;
 
         try {
@@ -71,19 +112,20 @@ public class Video {
             int likeCount = 0;  //jsonObject.getString("likeCount") == null? 0 : jsonObject.getInt("likeCount");
             String commentCount = jsonObject.getString("commentCount");
             int ratingCount = 0;    //jsonObject.getString("ratingCount") == null? 0 : jsonObject.getInt("ratingCount");
-            long duration = 0;  //jsonObject.getString("duration") == null? 0 : jsonObject.getLong("duration");
+            long duration = jsonObject.getString("duration") == null? 0 : jsonObject.getLong("duration");
             int favoriteCount = 0;  //jsonObject.getString("favoriteCount") == null? 0 : jsonObject.getInt("favoriteCount");
             String title = jsonObject.getString("title");
-            String updated = jsonObject.getString("updated");
+            String uploaded = jsonObject.getString("uploaded");
             int viewCount = 0; //jsonObject.getString("viewCount") == null? 0 : jsonObject.getInt("viewCount");
             String tags = jsonObject.getString("tags");
             String path = jsonObject.getString("path");
             String thumb = jsonObject.getString("thumb");
+            Thumbnails thumbnails = Thumbnails.getThumbnailsFromJson(jsonObject.getJSONObject("thumbnails"));
             String description = jsonObject.getString("description");
             String url = jsonObject.getString("url");
 
             video = new Video(id, rating, likeCount, commentCount, ratingCount, duration, favoriteCount, title,
-                                        updated, viewCount, tags, path, thumb, description, url, defaultImageId);
+                                        uploaded, viewCount, tags, path, thumb, description, url, thumbnails, DEFAULT_IMAGE);
         } catch (JSONException e) {
             Log.e("Video.getVideoFromJson", "Erro ao traduzir JSON: " + e.getMessage());
         }
@@ -160,12 +202,12 @@ public class Video {
         this.title = title;
     }
 
-    public String getUpdated() {
-        return updated;
+    public String getUploaded() {
+        return uploaded;
     }
 
-    public void setUpdated(String updated) {
-        this.updated = updated;
+    public void setUploaded(String uploaded) {
+        this.uploaded = uploaded;
     }
 
     public int getViewCount() {
@@ -224,8 +266,42 @@ public class Video {
         this.image = image;
     }
 
+    public void setThumbnails(Thumbnails thumbnails) {
+        this.thumbnails = thumbnails;
+    }
+
+    public Thumbnails getThumbnails() {
+        return thumbnails;
+    }
+
     @Override
     public String toString() {
         return "Vídeo: " + title + " | Descrição: " + description + " | id " + id;
+    }
+
+    public static class Thumbnails {
+        public String high;
+        public String medium;
+        public String standard;
+
+        public static Thumbnails getThumbnailsFromJson(JSONObject jsonObject) {
+            Thumbnails thumbnails = null;
+
+            if(jsonObject != null) {
+                try {
+                    if(jsonObject.getString("high") != null && jsonObject.getString("medium") != null && jsonObject.getString("standard") != null) {
+                        thumbnails = new Thumbnails();
+                        thumbnails.high = jsonObject.getJSONObject("high").getString("url");
+                        thumbnails.medium = jsonObject.getJSONObject("medium").getString("url");
+                        thumbnails.standard = jsonObject.getJSONObject("standard").getString("url");
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+
+            return thumbnails;
+        }
     }
 }

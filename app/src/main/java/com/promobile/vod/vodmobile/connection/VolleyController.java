@@ -1,6 +1,8 @@
 package com.promobile.vod.vodmobile.connection;
 
 import android.app.Application;
+import android.graphics.Bitmap;
+import android.support.v4.util.LruCache;
 import android.text.TextUtils;
 
 import com.android.volley.Request;
@@ -11,8 +13,7 @@ import com.android.volley.toolbox.Volley;
 
 public class VolleyController extends Application {
 
-    public static final String TAG = VolleyController.class
-            .getSimpleName();
+    public static final String TAG = VolleyController.class.getSimpleName();
 
     private RequestQueue mRequestQueue;
     private ImageLoader mImageLoader;
@@ -40,8 +41,7 @@ public class VolleyController extends Application {
     public ImageLoader getImageLoader() {
         getRequestQueue();
         if (mImageLoader == null) {
-            mImageLoader = new ImageLoader(this.mRequestQueue,
-                    new LruBitmapCache());
+            mImageLoader = new ImageLoader(this.mRequestQueue, new VodImageCache());
         }
         return this.mImageLoader;
     }
@@ -60,6 +60,26 @@ public class VolleyController extends Application {
     public void cancelPendingRequests(Object tag) {
         if (mRequestQueue != null) {
             mRequestQueue.cancelAll(tag);
+        }
+    }
+
+    private static class VodImageCache implements ImageLoader.ImageCache {
+        private static LruCache<String, Bitmap> bitmapLruCache;
+
+        public VodImageCache() {
+            bitmapLruCache = new LruCache<>(10);
+        }
+
+        @Override
+        public Bitmap getBitmap(String url) {
+            Bitmap bitmap = bitmapLruCache.get(url);
+
+            return bitmap;
+        }
+
+        @Override
+        public void putBitmap(String url, Bitmap bitmap) {
+            bitmapLruCache.put(url, bitmap);
         }
     }
 }

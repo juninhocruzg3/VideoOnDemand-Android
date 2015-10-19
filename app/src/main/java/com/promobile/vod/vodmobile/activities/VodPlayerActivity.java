@@ -2,8 +2,6 @@ package com.promobile.vod.vodmobile.activities;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -20,6 +18,8 @@ import android.widget.Toast;
 
 import com.google.android.exoplayer.VideoSurfaceView;
 import com.promobile.vod.vodmobile.R;
+import com.promobile.vod.vodmobile.connection.VodSource;
+import com.promobile.vod.vodmobile.model.Video;
 import com.promobile.vod.vodmobile.util.LocalStorage;
 import com.promobile.vod.vodmobile.vodplayer.VodPlayer;
 import com.promobile.vod.vodmobile.vodplayer.util.TimeFormat;
@@ -49,14 +49,6 @@ public class VodPlayerActivity extends Activity {
         init();
 
         buildDashVodPlayer();
-
-        MediaPlayer mediaPlayer = new MediaPlayer();
-        try {
-            mediaPlayer.setDataSource(getApplication(), Uri.parse("http://adasjdhsk"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        mediaPlayer.start();
     }
 
     /**
@@ -85,8 +77,10 @@ public class VodPlayerActivity extends Activity {
     private void buildDashVodPlayer() {
         LocalStorage localStorage = LocalStorage.getInstance(getApplicationContext());
 
+        Video video = localStorage.getObjectFromStorage(LocalStorage.OBJ_VIDEO, Video.class);
+
         int dash_evaluator_mode = localStorage.getIntFromStorage(LocalStorage.FORMAT_SELECTED);
-        String url = localStorage.getStringFromStorage(LocalStorage.VIDEO_URL);
+        String url = VodSource.URL_SERVER + video.getPath();
 
         vodPlayer = new VodPlayer(getApplicationContext(), videoSurfaceView, NUM_RENDERER);
         try {
@@ -174,15 +168,6 @@ public class VodPlayerActivity extends Activity {
         else {
             progressLinearLayout.setVisibility(View.VISIBLE);
             textLinearLayout.setVisibility(View.VISIBLE);
-        }
-    }
-
-    public void onClickToPlay(View view) {
-        if(vodPlayer.getPlayerStatus() == VodPlayer.PLAYING) {
-            vodPlayer.pause();
-        }
-        else {
-            vodPlayer.start();
         }
     }
 }

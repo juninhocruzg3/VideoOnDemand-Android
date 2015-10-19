@@ -22,7 +22,7 @@
             android:screenOrientation="landscape" >
         </activity>
         <activity
-            android:name=".activities.PlayListActivity"
+            android:name=".activities.ChannelActivity"
             android:label="@string/play_list" >
         </activity>
         <activity

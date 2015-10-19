@@ -34,7 +34,8 @@
                     android:layout_height="150dp"
                     android:id="@+id/image_description"
                     android:src="@mipmap/vod_logo"
-                    android:layout_alignParentTop="true"/>
+                    android:layout_alignParentTop="true"
+                    android:onClick="onClickToPlay"/>
                 <ImageView
                     android:layout_width="match_parent"
                     android:layout_height="150dp"
@@ -82,9 +83,8 @@
                 android:layout_height="50dp"
                 android:id="@+id/imageView"
                 android:src="@mipmap/ic_solid_play"
-                android:layout_marginTop="20dp"/>
+                android:layout_marginTop="20dp"
+                android:onClick="onClickToPlay"/>
         </LinearLayout>
     </ScrollView>
-
-
 </LinearLayout>
