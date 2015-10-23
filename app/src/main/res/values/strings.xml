@@ -32,7 +32,7 @@
     <string name="sintel_description">\"Sintel\" is an independently produced short film, initiated by the Blender Foundation as a means to further improve and validate the free/open source 3D creation suite Blender. With initial funding provided by 1000s of donations via the internet community, it has again proven to be a viable development model for both open 3D technology as for independent animation film. This 15 minute film has been realized in the studio of the Amsterdam Blender Institute, by an international team of artists and developers. In addition to that, several crucial technical and creative targets have been realized online, by developers and artists and teams all over the world. \n\nwww.sintel.org</string>
     <string name="duration_default">0:00s</string>
     <string name="date_default">02 de Agosto de 2015</string>
-    <string name="title_activity_description">Sintel - Open Movie</string>
+    <string name="title_activity_description">Descrição do Filme</string>
 
     <!-- Urls de serviços -->
 
@@ -53,6 +53,7 @@
     <string name="error_channel_list">Não foi possível obter a lista de canais. Verifique a conexão e clique AQUI para recarregar.</string>
     <string name="uploaded">Postado em: </string>
     <string name="search">Buscar</string>
+    <string name="connection_error">Erro ao baixar lista de canais. verifique a conexão.</string>
 
 
 </resources>

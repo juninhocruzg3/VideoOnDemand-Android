@@ -58,8 +58,8 @@ public class VideoListAdapter extends ArrayAdapter<Video> {
         String title = "" + video.getTitle();
         holder.title.setText(title);
 
-        String description = "" + video.getDescription();
-        holder.duration.setText(description);
+        String duration = "" + video.getFormattedDuration();
+        holder.duration.setText(duration);
 
         if(video.getThumbnails() == null) {
             imageLoader.get(VodSource.URL_SERVER + video.getThumb(), new VodImageListener(holder.imageView));

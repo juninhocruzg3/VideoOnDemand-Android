@@ -439,6 +439,10 @@ public class VodPlayer {
         this.vodPlayerListener = vodPlayerListener;
     }
 
+    public void release() {
+        exoPlayer.release();
+    }
+
     public String getUserAgent() {
         if(userAgent == null) {
             setDefaultUserAgent();

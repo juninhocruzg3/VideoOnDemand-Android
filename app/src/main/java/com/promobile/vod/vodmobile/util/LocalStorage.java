@@ -39,6 +39,11 @@ public class LocalStorage {
      */
     public static final String OBJ_CHANNEL = "obj_channel";
 
+    /**
+     * Type: {@link java.util.ArrayList}
+     */
+    public static String CHANNEL_LIST = "channel_list";
+
     private static final String SETTINGS = "settings";
 
 

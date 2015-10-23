@@ -7,24 +7,32 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
+import com.android.volley.VolleyError;
 import com.promobile.vod.vodmobile.R;
 import com.promobile.vod.vodmobile.activities.navigation.MainActivity;
+import com.promobile.vod.vodmobile.connection.VodSource;
+import com.promobile.vod.vodmobile.model.Channel;
+import com.promobile.vod.vodmobile.util.Fingerprinting;
 import com.promobile.vod.vodmobile.util.LocalStorage;
 import com.promobile.vod.vodmobile.vodplayer.VodPlayer;
 
-import com.promobile.vod.vodmobile.util.Fingerprinting;
+import java.util.ArrayList;
 
 public class SplashActivity extends Activity {
     private ProgressDialog pDialog;
     private Fingerprinting fingerprinting;
+    private VodSource vodSource;
+    private LocalStorage localStorage;
+    private boolean isFingerprintingComplete, isUpdateChannelListComplete;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        LocalStorage localStorage = LocalStorage.getInstance(getApplicationContext());
+        localStorage = LocalStorage.getInstance(getApplicationContext());
         if(localStorage.getBooleanFromStorage(LocalStorage.IS_FORMAT_SELECTED)) {
             localStorage.getIntFromStorage(LocalStorage.FORMAT_SELECTED);
         }
@@ -47,6 +55,28 @@ public class SplashActivity extends Activity {
         });
 
         fingerprinting.doFingerprinting();
+        updateChannelList();
+    }
+
+    private void updateChannelList() {
+        vodSource = VodSource.getInstance();
+        vodSource.getChannelsList(new VodSource.ChannelsListListener() {
+            @Override
+            public void onSucess(ArrayList<Channel> arrayList) {
+                localStorage.addToStorage(LocalStorage.CHANNEL_LIST, arrayList);
+                isUpdateChannelListComplete = true;
+                if(isFingerprintingComplete)
+                    startMainActivity();
+            }
+
+            @Override
+            public void onError(VolleyError error) {
+                Toast.makeText(getApplicationContext(), getString(R.string.connection_error), Toast.LENGTH_LONG).show();
+                isUpdateChannelListComplete = true;
+                if(isFingerprintingComplete)
+                    startMainActivity();
+            }
+        });
     }
 
     private void onFingerPrintingFinish(String data) {
@@ -55,6 +85,13 @@ public class SplashActivity extends Activity {
 
         Log.d("SplashAct.onFin...", data);
 
+        isFingerprintingComplete = true;
+        if(isUpdateChannelListComplete) {
+            startMainActivity();
+        }
+    }
+
+    private void startMainActivity() {
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
         finish();

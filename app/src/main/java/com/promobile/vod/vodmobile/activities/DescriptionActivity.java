@@ -47,6 +47,7 @@ public class DescriptionActivity extends AppCompatActivity {
         /**
          * Preenchimento das Views
          */
+        setTitle(video.getTitle());
         title.setText(video.getTitle());
         duration.setText(video.getFormattedDuration());
         description.setText(video.getDescription());

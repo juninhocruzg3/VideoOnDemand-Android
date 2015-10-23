@@ -38,6 +38,7 @@ public class VodPlayerActivity extends Activity {
     private LinearLayout textLinearLayout, progressLinearLayout;
 
     private long currentPosition;
+    private boolean thereIsThis;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +57,7 @@ public class VodPlayerActivity extends Activity {
      */
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void init() {
+        thereIsThis = true;
         videoSurfaceView = (VideoSurfaceView) findViewById(R.id.video_surface_view);
 
         tvCurrentPosition = (TextView) findViewById(R.id.tv_current_position);
@@ -111,20 +113,21 @@ public class VodPlayerActivity extends Activity {
             @Override
             public void run() {
                 Log.i("VodPlayerAct", "BufferedPercentage: " + vodPlayer.getExoPlayer().getBufferedPercentage() +
-                        "\nCurrentPosition:" + ((double)vodPlayer.getExoPlayer().getCurrentPosition()/1000.0) + "s" +
-                        "\nBufferedPosition: " + ((double)vodPlayer.getExoPlayer().getBufferedPosition()/1000.0) + "s" +
-                        "\nDuration: " + ((double)vodPlayer.getExoPlayer().getDuration()/1000.0) + "s" +
-                        "\nBufferTime: " + ((double)(vodPlayer.getExoPlayer().getBufferedPosition() - vodPlayer.getExoPlayer().getCurrentPosition()))/1000.0 + "s");
+                        "\nCurrentPosition:" + ((double) vodPlayer.getExoPlayer().getCurrentPosition() / 1000.0) + "s" +
+                        "\nBufferedPosition: " + ((double) vodPlayer.getExoPlayer().getBufferedPosition() / 1000.0) + "s" +
+                        "\nDuration: " + ((double) vodPlayer.getExoPlayer().getDuration() / 1000.0) + "s" +
+                        "\nBufferTime: " + ((double) (vodPlayer.getExoPlayer().getBufferedPosition() - vodPlayer.getExoPlayer().getCurrentPosition())) / 1000.0 + "s");
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         tvCurrentPosition.setText(TimeFormat.miliToHHmmss(vodPlayer.getExoPlayer().getCurrentPosition()));
                         tvDuration.setText(TimeFormat.miliToHHmmss(vodPlayer.getExoPlayer().getDuration()));
-                        progressBar.setProgress((int)(100*((float) vodPlayer.getExoPlayer().getCurrentPosition()/(float)vodPlayer.getExoPlayer().getDuration())));
-                        progressBar.setSecondaryProgress((int) (100*((float) vodPlayer.getExoPlayer().getBufferedPosition()/(float) vodPlayer.getExoPlayer().getDuration())));
+                        progressBar.setProgress((int) (100 * ((float) vodPlayer.getExoPlayer().getCurrentPosition() / (float) vodPlayer.getExoPlayer().getDuration())));
+                        progressBar.setSecondaryProgress((int) (100 * ((float) vodPlayer.getExoPlayer().getBufferedPosition() / (float) vodPlayer.getExoPlayer().getDuration())));
                     }
                 });
-                gerarLogs();
+                if(thereIsThis)
+                    gerarLogs();
             }
         }, 1000);
     }
@@ -169,5 +172,13 @@ public class VodPlayerActivity extends Activity {
             progressLinearLayout.setVisibility(View.VISIBLE);
             textLinearLayout.setVisibility(View.VISIBLE);
         }
+    }
+
+    @Override
+    protected void onStop() {
+        vodPlayer.release();
+        thereIsThis = false;
+
+        super.onStop();
     }
 }

@@ -2,7 +2,6 @@ package com.promobile.vod.vodmobile.model;
 
 import android.util.Log;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -45,11 +44,7 @@ public class Channel {
             String name = jsonObject.getString("playlist_nome");
             String uploader = jsonObject.getString("playlist_uploader");
             String description = jsonObject.getString("playlist_descricao");
-            JSONArray jsonArrayTracks = jsonObject.getJSONArray("playlist_track");
-            ArrayList<Video> tracks = new ArrayList<>();
-            for (int i = 0; i < jsonArrayTracks.length(); i++) {
-                tracks.add(new Video(jsonArrayTracks.getJSONObject(i).getString("$id")));
-            }
+            ArrayList<Video> tracks = null;
             int viewCount = jsonObject.getString("playlist_viewCount") == null? 0 : jsonObject.getInt("playlist_viewCount");
 
             channel = new Channel(id, name, uploader, description, tracks, viewCount);

@@ -11,7 +11,6 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
@@ -58,10 +57,12 @@ public class ChannelActivity extends ActionBarActivity {
                     adapter = new VideoListAdapter(getApplicationContext(), videoList, imageLoader);
                     listView.setAdapter(adapter);
                 }
-                finalizeProgressDialog();
+
                 if (adapter.isEmpty()) {
                     onErrorDownloadList();
                 }
+
+                finalizeProgressDialog();
             }
 
             @Override
@@ -89,6 +90,8 @@ public class ChannelActivity extends ActionBarActivity {
     private void initializeVariables() {
         localStorage = LocalStorage.getInstance(getApplicationContext());
         channel = localStorage.getObjectFromStorage(LocalStorage.OBJ_CHANNEL, Channel.class);
+
+        setTitle(channel.getName());
 
         if(vodSource == null)
             vodSource = VodSource.getInstance();
@@ -157,22 +160,9 @@ public class ChannelActivity extends ActionBarActivity {
                 btnDetails.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        initializeProgressDialog();
-                        vodSource.getVideo(adapter.getItem(pposition), new VodSource.VideoListener() {
-                            @Override
-                            public void onSucess(Video video) {
-                                localStorage.addToStorage(LocalStorage.OBJ_VIDEO, video);
-                                Intent intent = new Intent(getApplicationContext(), DescriptionActivity.class);
-                                finalizeProgressDialog();
-                                startActivity(intent);
-                            }
-
-                            @Override
-                            public void onError(VolleyError error) {
-                                finalizeProgressDialog();
-                                Toast.makeText(getApplicationContext(), getString(R.string.error_video_list), Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                        localStorage.addToStorage(LocalStorage.OBJ_VIDEO, adapter.getItem(pposition));
+                        Intent intent = new Intent(getApplicationContext(), DescriptionActivity.class);
+                        startActivity(intent);
                     }
                 });
                 btnWatch.setOnClickListener(new View.OnClickListener() {

@@ -58,7 +58,26 @@ public class ChannelFragment extends MainActivity.PlaceholderFragment {
 
         listView.setOnItemClickListener(new OnChannelClickList());
 
+        //ArrayList<Object> arrayList= localStrorage.getObjectFromStorage(LocalStorage.CHANNEL_LIST, ArrayList.class);
         sendChannelListRequest();
+//        if(arrayList == null)
+//
+//        else {
+//            ArrayList<Channel> channelArrayList = new ArrayList<>();
+//            for(int i = 0; i < arrayList.size(); i++) {
+//                try {
+//                    //Log.d("Channel Fragment", "json = " + arrayList.get(i).toString());
+//                    //JSONObject json = new JSONObject(arrayList.get(i).toString());
+//
+//                    //channelArrayList.add(Channel.getChannelFromJsonObject(json));
+//                } catch (Exception e) {
+//                    Log.d("ChannelFragment", "Não deu certo. e = " + e.getMessage());
+//                }
+//            }
+//            adapter = new ArrayAdapter(rootView.getContext(), android.R.layout.simple_list_item_1, arrayList);
+//            listView.setAdapter(adapter);
+//            finalizeProgressDialog();
+//        }
     }
 
     private void sendChannelListRequest() {

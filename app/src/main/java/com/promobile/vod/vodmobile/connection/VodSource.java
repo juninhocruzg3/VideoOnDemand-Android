@@ -205,18 +205,16 @@ public class VodSource {
 
                 Log.d("VodSource", "channel = " + jsonObject.toString());
 
-                ArrayList<Video> tracks = channel.getTracks();
-                for (int i = 0; i < tracks.size() && i < jsonArray.length(); i++) {
-                    Video video = tracks.get(i);
+                ArrayList<Video> tracks = new ArrayList<>();
+                for (int i = 0; i < jsonArray.length(); i++) {
                     JSONObject jsonVideo = jsonArray.getJSONObject(i);
-                    video.setTitle(jsonVideo.getString("title"));
-                    video.setDescription(jsonVideo.getString("description"));
-                    video.setPath(jsonVideo.getString("path"));
-                    video.setThumbnails(Video.Thumbnails.getThumbnailsFromJson(jsonVideo.getJSONObject("thumbnails")));
+                    Video video = Video.getVideoFromJsonObject(jsonVideo);
+                    if(video != null)
+                        tracks.add(video);
                 }
-
+                channel.setTracks(tracks);
             } catch (JSONException e) {
-                e.printStackTrace();
+                Log.e("ChannelRespListener", "Erro ao fazer parse de JSON para Vídeo");
             }
 
             channelListener.onSucess(channel);
