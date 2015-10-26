@@ -6,7 +6,7 @@ import com.google.android.exoplayer.chunk.Format;
 import com.google.android.exoplayer.chunk.FormatEvaluator;
 import com.google.android.exoplayer.chunk.MediaChunk;
 import com.google.android.exoplayer.upstream.BandwidthMeter;
-import com.promobile.vod.vodmobile.vodplayer.logs.ChunkLog;
+import com.promobile.vod.vodmobile.vodplayer.logs.ChunkHistoric;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -81,8 +81,8 @@ public class AdaptechEvaluator implements FormatEvaluator {
         if(bitrate != -1) {
             if (isVideo) {
                 if(!queue.isEmpty()) {
-                    ChunkLog chunckLog = ChunkLog.addChunkLog(bitrate, queue.get(queue.size()-1).getDataSpec().length);
-                    bitrateMedia2 = calculateBitrateMedia(ChunkLog.getInstance());
+                    ChunkHistoric chunckLog = ChunkHistoric.addChunkLog(bitrate, queue.get(queue.size() - 1).getDataSpec().length);
+                    bitrateMedia2 = calculateBitrateMedia(ChunkHistoric.getInstance());
                     Log.d(TAG, "Bitrate Média [2] = " + bitrateMedia2);
                 }
             }
@@ -139,7 +139,7 @@ public class AdaptechEvaluator implements FormatEvaluator {
 
     }
 
-    private double calculateBitrateMedia(ArrayList<ChunkLog> chunkLogsList) {
+    private double calculateBitrateMedia(ArrayList<ChunkHistoric> chunkLogsList) {
         double media = 0;
 
         if(chunkLogsList.isEmpty()) {
@@ -157,7 +157,7 @@ public class AdaptechEvaluator implements FormatEvaluator {
         return media;
     }
 
-    private int calculateFirshIndexInTime(ArrayList<ChunkLog> chunkLogsList) {
+    private int calculateFirshIndexInTime(ArrayList<ChunkHistoric> chunkLogsList) {
         int firshIndexInTime = chunkLogsList.size();
         double totalTime = 0;
         do {

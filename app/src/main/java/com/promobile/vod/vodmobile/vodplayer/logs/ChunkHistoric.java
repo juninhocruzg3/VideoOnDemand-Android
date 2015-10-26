@@ -6,42 +6,41 @@ import java.util.ArrayList;
  * Created by CRUZ JR, A.C.V. on 22/07/15.
  * Classe criada para gerenciar os valores de Logs para análises e cálculos
  */
-public class ChunkLog {
-    private static ArrayList<ChunkLog> chunkLogs;
+public class ChunkHistoric {
+    private static ArrayList<ChunkHistoric> chunkHistorics;
 
     private double bandWidthMeter;
     private long bytes;
     private long length;
 
-    public static ArrayList<ChunkLog> getInstance() {
-        if(chunkLogs == null)
-            chunkLogs = new ArrayList<>();
+    public static ArrayList<ChunkHistoric> getInstance() {
+        if(chunkHistorics == null)
+            chunkHistorics = new ArrayList<>();
 
-        return chunkLogs;
+        return chunkHistorics;
     }
 
-    public static ChunkLog addChunkLog(double bandWidthMeter, long bytes) {
-        if(chunkLogs == null)
-            getInstance();
+    public static ChunkHistoric addChunkLog(double bandWidthMeter, long bytes) {
+        getInstance();
 
-        ChunkLog chunkLog = new ChunkLog(bandWidthMeter, bytes);
+        ChunkHistoric chunkHistoric = new ChunkHistoric(bandWidthMeter, bytes);
 
-        chunkLogs.add(chunkLog);
+        chunkHistorics.add(chunkHistoric);
 
-        return chunkLog;
+        return chunkHistoric;
     }
 
-    private ChunkLog(double bandWidthMeter, long bytes) {
+    private ChunkHistoric(double bandWidthMeter, long bytes) {
         this.bandWidthMeter = bandWidthMeter;
         this.bytes = bytes;
     }
 
-    public static ArrayList<ChunkLog> getChunkLogs() {
-        return chunkLogs;
+    public static ArrayList<ChunkHistoric> getChunkHistorics() {
+        return chunkHistorics;
     }
 
-    public static void setChunkLogs(ArrayList<ChunkLog> chunkLogs) {
-        ChunkLog.chunkLogs = chunkLogs;
+    public static void setChunkHistorics(ArrayList<ChunkHistoric> chunkHistorics) {
+        ChunkHistoric.chunkHistorics = chunkHistorics;
     }
 
     public double getBandWidthMeter() {

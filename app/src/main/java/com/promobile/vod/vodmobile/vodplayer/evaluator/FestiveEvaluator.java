@@ -107,12 +107,7 @@ public class FestiveEvaluator implements FormatEvaluator {
                      * Gerando Log para debug... Está comentado por causa do atraso na reprodução.
                      */
                     String log = "Quantidade de chunks baixados"+historicChunkList.size();
-//
-//                    for (int i = 0; i < historicChunkList.size(); i++) {
-//                        String chunkLog = "[" + i + "]\n" + historicChunkList.get(i).toString() + "\n\n";
-//                        log += chunkLog;
-//                    }
-//
+
                     Log.i(TAG, log);
 
 

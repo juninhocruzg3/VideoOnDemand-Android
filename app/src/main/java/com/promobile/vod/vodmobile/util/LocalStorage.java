@@ -128,6 +128,8 @@ public class LocalStorage {
                 Channel channel = value.get(i);
                 addToStorage(CHANNEL_LIST + i, channel);
             }
+        } else if(value.size() > 20) {
+            addToStorage(SIZE_CHANNEL_LIST, 0);
         }
     }
 
