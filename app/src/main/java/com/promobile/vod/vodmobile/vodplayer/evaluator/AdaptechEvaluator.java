@@ -6,7 +6,7 @@ import com.google.android.exoplayer.chunk.Format;
 import com.google.android.exoplayer.chunk.FormatEvaluator;
 import com.google.android.exoplayer.chunk.MediaChunk;
 import com.google.android.exoplayer.upstream.BandwidthMeter;
-import com.promobile.vod.vodmobile.vodplayer.logs.ChunkHistoric;
+import com.promobile.vod.vodmobile.vodplayer.util.ChunkHistoric;
 
 import java.util.ArrayList;
 import java.util.List;

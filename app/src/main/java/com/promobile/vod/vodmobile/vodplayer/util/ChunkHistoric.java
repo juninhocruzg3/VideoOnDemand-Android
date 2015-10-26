@@ -1,4 +1,4 @@
-package com.promobile.vod.vodmobile.vodplayer.logs;
+package com.promobile.vod.vodmobile.vodplayer.util;
 
 import java.util.ArrayList;
 
