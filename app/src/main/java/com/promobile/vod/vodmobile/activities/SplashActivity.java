@@ -63,8 +63,9 @@ public class SplashActivity extends Activity {
         vodSource.getChannelsList(new VodSource.ChannelsListListener() {
             @Override
             public void onSucess(ArrayList<Channel> arrayList) {
-                localStorage.addToStorage(LocalStorage.CHANNEL_LIST, arrayList);
+                localStorage.addChannelListToStorage(arrayList);
                 isUpdateChannelListComplete = true;
+                Log.d("SplashAcr", "Lista de Canais atualizada. Size = " + arrayList.size());
                 if(isFingerprintingComplete)
                     startMainActivity();
             }

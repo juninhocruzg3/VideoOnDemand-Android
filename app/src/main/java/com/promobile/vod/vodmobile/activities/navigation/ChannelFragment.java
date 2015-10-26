@@ -1,6 +1,7 @@
 package com.promobile.vod.vodmobile.activities.navigation;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -33,6 +34,7 @@ public class ChannelFragment extends MainActivity.PlaceholderFragment {
     private VodSource vodSource;
     private TextView tvError;
     private static ProgressDialog progressDialog;
+    private Context context;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -47,6 +49,7 @@ public class ChannelFragment extends MainActivity.PlaceholderFragment {
         initializeProgressDialog();
         listView = (ListView) rootView.findViewById(R.id.listview_channel);
         localStrorage = LocalStorage.getInstance(rootView.getContext());
+        this.context = rootView.getContext();
 
         if(vodSource == null) {
             vodSource = VodSource.getInstance();
@@ -58,38 +61,26 @@ public class ChannelFragment extends MainActivity.PlaceholderFragment {
 
         listView.setOnItemClickListener(new OnChannelClickList());
 
-        //ArrayList<Object> arrayList= localStrorage.getObjectFromStorage(LocalStorage.CHANNEL_LIST, ArrayList.class);
-        sendChannelListRequest();
-//        if(arrayList == null)
-//
-//        else {
-//            ArrayList<Channel> channelArrayList = new ArrayList<>();
-//            for(int i = 0; i < arrayList.size(); i++) {
-//                try {
-//                    //Log.d("Channel Fragment", "json = " + arrayList.get(i).toString());
-//                    //JSONObject json = new JSONObject(arrayList.get(i).toString());
-//
-//                    //channelArrayList.add(Channel.getChannelFromJsonObject(json));
-//                } catch (Exception e) {
-//                    Log.d("ChannelFragment", "Não deu certo. e = " + e.getMessage());
-//                }
-//            }
-//            adapter = new ArrayAdapter(rootView.getContext(), android.R.layout.simple_list_item_1, arrayList);
-//            listView.setAdapter(adapter);
-//            finalizeProgressDialog();
-//        }
+        ArrayList<Channel> arrayList = localStrorage.getChannelListFromStorage();
+
+        if(arrayList == null || arrayList.isEmpty())
+            sendChannelListRequest();
+        else {
+            adapter = new ArrayAdapter(context, android.R.layout.simple_list_item_1, arrayList);
+            listView.setAdapter(adapter);
+            finalizeProgressDialog();
+        }
     }
 
     private void sendChannelListRequest() {
+        Log.d("ChannelFrag", "Requisitando a lista de canais");
         vodSource.getChannelsList(new VodSource.ChannelsListListener() {
             @Override
             public void onSucess(ArrayList<Channel> arrayList) {
                 if (arrayList != null) {
                     try {
-                        adapter = new ArrayAdapter(rootView.getContext(), android.R.layout.simple_list_item_1, arrayList);
+                        adapter = new ArrayAdapter(context, android.R.layout.simple_list_item_1, arrayList);
                         listView.setAdapter(adapter);
-
-
                     } catch (Exception e) {
                         Log.e("onSucessChannelList", "Adapter não suportou ArrayList<Canal>.");
                     }

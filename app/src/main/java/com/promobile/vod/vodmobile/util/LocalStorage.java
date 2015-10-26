@@ -6,6 +6,10 @@ import android.content.SharedPreferences.Editor;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.promobile.vod.vodmobile.model.Channel;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Classe que gerencia a Persistência de dados por meio do SharedPreferences
@@ -43,6 +47,11 @@ public class LocalStorage {
      * Type: {@link java.util.ArrayList}
      */
     public static String CHANNEL_LIST = "channel_list";
+
+    /**
+     * Type: int
+     */
+    public static String SIZE_CHANNEL_LIST = "size_channel_list";
 
     private static final String SETTINGS = "settings";
 
@@ -105,6 +114,39 @@ public class LocalStorage {
         String json = gson.toJson(value);
         editor.putString(key, json);
         editor.commit();
+    }
+
+    /**
+     * Persiste a lista de canais
+     * @param value
+     */
+    public void addChannelListToStorage(List<Channel> value) {
+        if(value != null && value.size() < 20) {
+            addToStorage(SIZE_CHANNEL_LIST, value.size());
+
+            for(int i = 0; i < value.size(); i++) {
+                Channel channel = value.get(i);
+                addToStorage(CHANNEL_LIST + i, channel);
+            }
+        }
+    }
+
+    /**
+     * Retorna a lista de canais persistida
+     * @return
+     */
+    public ArrayList<Channel> getChannelListFromStorage() {
+        ArrayList<Channel> arrayList = new ArrayList<>();
+
+        int size = getIntFromStorage(SIZE_CHANNEL_LIST);
+
+        for(int i = 0; i < size; i++) {
+            Channel channel = getObjectFromStorage(CHANNEL_LIST + i, Channel.class);
+
+            arrayList.add(channel);
+        }
+
+        return arrayList;
     }
 
     /**
