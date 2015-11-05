@@ -24,7 +24,6 @@ import com.google.android.exoplayer.VideoSurfaceView;
 import com.google.android.exoplayer.chunk.ChunkSampleSource;
 import com.google.android.exoplayer.chunk.ChunkSource;
 import com.google.android.exoplayer.chunk.FormatEvaluator;
-import com.google.android.exoplayer.dash.DashChunkSource;
 import com.google.android.exoplayer.dash.mpd.MediaPresentationDescription;
 import com.google.android.exoplayer.dash.mpd.MediaPresentationDescriptionParser;
 import com.google.android.exoplayer.dash.mpd.Representation;
@@ -36,10 +35,14 @@ import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer.upstream.UriDataSource;
 import com.google.android.exoplayer.util.ManifestFetcher;
 import com.promobile.vod.vodmobile.vodplayer.evaluator.AdaptechEvaluator;
+import com.promobile.vod.vodmobile.vodplayer.evaluator.ExoPlayerAdaptiveEvaluator;
 import com.promobile.vod.vodmobile.vodplayer.evaluator.FestiveEvaluator;
 import com.promobile.vod.vodmobile.vodplayer.evaluator.chunkSource.AdapTechDashChunkSource;
+import com.promobile.vod.vodmobile.vodplayer.evaluator.chunkSource.ExoPlayerDashChunkSource;
 import com.promobile.vod.vodmobile.vodplayer.evaluator.chunkSource.FestiveDashChunkSource;
+import com.promobile.vod.vodmobile.vodplayer.logs.LogOnDemand;
 import com.promobile.vod.vodmobile.vodplayer.mpd.MpdManager;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -241,7 +244,7 @@ public class VodPlayer {
         else if(evaluationMode == FESTIVE_EVALUATOR) {
             formatEvaluator = new FestiveEvaluator(bandwidthMeter);
         } else if(evaluationMode == DEFAULT_EVALUATOR) {
-            formatEvaluator = new FormatEvaluator.AdaptiveEvaluator(bandwidthMeter);
+            formatEvaluator = new ExoPlayerAdaptiveEvaluator(bandwidthMeter);
         }
 
         manifestFetcher = new ManifestFetcher<MediaPresentationDescription>(new MediaPresentationDescriptionParser(), "VodPlayer", mdpUrl, userAgent);
@@ -271,6 +274,11 @@ public class VodPlayer {
             manifestReceive++;
         }
         else {
+            LogOnDemand.enable();
+            LogOnDemand.haveStallLog = true;
+            LogOnDemand.haveBufferLog = true;
+            LogOnDemand.haveChunkLog = true;
+
             try {
                 List<Representation> videoRepresentationList = mpdManager.getVideoRepresentationList();
                 List<Representation> audioRepresentationList = audioMpdManager.getAudioRepresentationList();
@@ -283,8 +291,8 @@ public class VodPlayer {
                     chunkSource = new FestiveDashChunkSource(videoDataSource, formatEvaluator, videoRepresentationList);
                     audioChunkSource = new FestiveDashChunkSource(audioDataSource, formatEvaluator, audioRepresentationList);
                 } else if (evaluationMode == DEFAULT_EVALUATOR) {
-                    chunkSource = new DashChunkSource(videoDataSource, formatEvaluator, videoRepresentationList);
-                    audioChunkSource = new DashChunkSource(audioDataSource, formatEvaluator, audioRepresentationList);
+                    chunkSource = new ExoPlayerDashChunkSource(videoDataSource, formatEvaluator, videoRepresentationList);
+                    audioChunkSource = new ExoPlayerDashChunkSource(audioDataSource, formatEvaluator, audioRepresentationList);
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Erro em DashChunckSource: " + e.getLocalizedMessage() + " | " + e.getMessage());
@@ -504,6 +512,30 @@ public class VodPlayer {
         @Override
         public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
             makeDebugLog("onPlayerStateChanged executado. ( playWhenReady=[" + playWhenReady + "] | playBackState=[" + playbackState + "] )");
+
+            switch (playbackState) {
+                case 5:
+                    // Fim de execução
+                    LogOnDemand.sendLogs();
+                    break;
+                case 4:
+                    if(playWhenReady) {
+                        // Executando normal
+                    }
+                    else {
+                        // Pausado normal
+                    }
+                    LogOnDemand.addFinishStallLog();
+                    break;
+                case 3:
+                    if(playWhenReady) {
+                        // Executando sem buffer
+                    } else {
+                        // Pausado sem buffer
+                    }
+                    LogOnDemand.addStartStallLog();
+                    break;
+            }
         }
 
         @Override

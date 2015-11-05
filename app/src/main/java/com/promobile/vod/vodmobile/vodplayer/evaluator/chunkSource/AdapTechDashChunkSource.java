@@ -50,6 +50,7 @@ import com.google.android.exoplayer.upstream.DataSpec;
 import com.google.android.exoplayer.upstream.NonBlockingInputStream;
 import com.google.android.exoplayer.util.ManifestFetcher;
 import com.google.android.exoplayer.util.MimeTypes;
+import com.promobile.vod.vodmobile.vodplayer.logs.LogOnDemand;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -401,6 +402,17 @@ public class AdapTechDashChunkSource implements ChunkSource {
           else {
               //Steady State
           }
+
+
+    /**
+     * Gerador de Logs
+     */
+    if (formats[0].mimeType.substring(0, 5).equalsIgnoreCase("audio")) {
+      //Audio
+    }
+    else if(LogOnDemand.haveChunkLog) {
+      LogOnDemand.addStartChunkLog(segmentNum, evaluation.format.id, evaluation.format.width);
+    }
   }
 
   @Override

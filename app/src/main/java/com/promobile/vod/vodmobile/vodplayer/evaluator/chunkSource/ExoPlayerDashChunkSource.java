@@ -17,7 +17,6 @@ package com.promobile.vod.vodmobile.vodplayer.evaluator.chunkSource;
 
 import android.net.Uri;
 import android.os.SystemClock;
-import android.util.Log;
 
 import com.google.android.exoplayer.BehindLiveWindowException;
 import com.google.android.exoplayer.MediaFormat;
@@ -55,12 +54,10 @@ import com.promobile.vod.vodmobile.vodplayer.logs.LogOnDemand;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 
 /**
@@ -68,13 +65,7 @@ import java.util.UUID;
  * <p>
  * This implementation currently supports fMP4, webm, and webvtt.
  */
-public class FestiveDashChunkSource implements ChunkSource {
-  public static long DELAYING;
-  public static long DELTA;
-  public static boolean IS_DELAYING;
-  public static int threadKilled;
-
-  public static final int DEFAULT_BUFFER_TIME = 30000000;
+public class ExoPlayerDashChunkSource implements ChunkSource {
 
   /**
    * Thrown when an AdaptationSet is missing from the MPD.
@@ -122,8 +113,8 @@ public class FestiveDashChunkSource implements ChunkSource {
    * @param formatEvaluator Selects from the available formats.
    * @param representations The representations to be considered by the source.
    */
-  public FestiveDashChunkSource(DataSource dataSource, FormatEvaluator formatEvaluator,
-                                Representation... representations) {
+  public ExoPlayerDashChunkSource(DataSource dataSource, FormatEvaluator formatEvaluator,
+                                  Representation... representations) {
     this(buildManifest(Arrays.asList(representations)), 0, null, dataSource, formatEvaluator);
   }
 
@@ -134,8 +125,8 @@ public class FestiveDashChunkSource implements ChunkSource {
    * @param formatEvaluator Selects from the available formats.
    * @param representations The representations to be considered by the source.
    */
-  public FestiveDashChunkSource(DataSource dataSource, FormatEvaluator formatEvaluator,
-                                List<Representation> representations) {
+  public ExoPlayerDashChunkSource(DataSource dataSource, FormatEvaluator formatEvaluator,
+                                  List<Representation> representations) {
     this(buildManifest(representations), 0, null, dataSource, formatEvaluator);
   }
 
@@ -150,8 +141,8 @@ public class FestiveDashChunkSource implements ChunkSource {
    * @param dataSource A {@link DataSource} suitable for loading the media data.
    * @param formatEvaluator Selects from the available formats.
    */
-  public FestiveDashChunkSource(MediaPresentationDescription manifest, int adaptationSetIndex,
-                                int[] representationIndices, DataSource dataSource, FormatEvaluator formatEvaluator) {
+  public ExoPlayerDashChunkSource(MediaPresentationDescription manifest, int adaptationSetIndex,
+                                  int[] representationIndices, DataSource dataSource, FormatEvaluator formatEvaluator) {
     this(null, manifest, adaptationSetIndex, representationIndices, dataSource, formatEvaluator, 0);
   }
 
@@ -175,17 +166,17 @@ public class FestiveDashChunkSource implements ChunkSource {
    *     note that the value sets an upper bound on the length of media that the player can buffer.
    *     Hence a small value may increase the probability of rebuffering and playback failures.
    */
-  public FestiveDashChunkSource(ManifestFetcher<MediaPresentationDescription> manifestFetcher,
-                                int adaptationSetIndex, int[] representationIndices, DataSource dataSource,
-                                FormatEvaluator formatEvaluator, long liveEdgeLatencyMs) {
+  public ExoPlayerDashChunkSource(ManifestFetcher<MediaPresentationDescription> manifestFetcher,
+                                  int adaptationSetIndex, int[] representationIndices, DataSource dataSource,
+                                  FormatEvaluator formatEvaluator, long liveEdgeLatencyMs) {
     this(manifestFetcher, manifestFetcher.getManifest(), adaptationSetIndex, representationIndices,
         dataSource, formatEvaluator, liveEdgeLatencyMs * 1000);
   }
 
-  private FestiveDashChunkSource(ManifestFetcher<MediaPresentationDescription> manifestFetcher,
-                                 MediaPresentationDescription initialManifest, int adaptationSetIndex,
-                                 int[] representationIndices, DataSource dataSource, FormatEvaluator formatEvaluator,
-                                 long liveEdgeLatencyUs) {
+  private ExoPlayerDashChunkSource(ManifestFetcher<MediaPresentationDescription> manifestFetcher,
+                                   MediaPresentationDescription initialManifest, int adaptationSetIndex,
+                                   int[] representationIndices, DataSource dataSource, FormatEvaluator formatEvaluator,
+                                   long liveEdgeLatencyUs) {
     this.manifestFetcher = manifestFetcher;
     this.currentManifest = initialManifest;
     this.adaptationSetIndex = adaptationSetIndex;
@@ -257,7 +248,7 @@ public class FestiveDashChunkSource implements ChunkSource {
 
     MediaPresentationDescription newManifest = manifestFetcher.getManifest();
     if (currentManifest != newManifest && newManifest != null) {
-      Representation[] newRepresentations = FestiveDashChunkSource.getFilteredRepresentations(newManifest,
+      Representation[] newRepresentations = ExoPlayerDashChunkSource.getFilteredRepresentations(newManifest,
               adaptationSetIndex, representationIndices);
       for (Representation representation : newRepresentations) {
         RepresentationHolder representationHolder =
@@ -290,80 +281,12 @@ public class FestiveDashChunkSource implements ChunkSource {
   }
 
   @Override
-  public final void getChunkOperation(List<? extends MediaChunk> queue, long seekPositionUs, long playbackPositionUs, ChunkOperationHolder out) {
+  public final void getChunkOperation(List<? extends MediaChunk> queue, long seekPositionUs,
+      long playbackPositionUs, ChunkOperationHolder out) {
     if (fatalError != null) {
       out.chunk = null;
       return;
     }
-
-
-
-    /**
-     *
-     * Este trecho atrasa o download de chunks aleatóriamente quando o buffer ultrapassa 30s+DELTA
-     *
-     */
-    long bufferEndTime = queue.isEmpty()? 0: queue.get(queue.size() - 1).endTimeUs;
-    long bufferTotalTime = bufferEndTime > 0? bufferEndTime - playbackPositionUs:0;
-    long systemTime = Calendar.getInstance().getTimeInMillis();
-
-
-    if(DELTA == 0) {
-      DELTA = queue.isEmpty()? 0: bufferEndTime - queue.get(queue.size() - 1).startTimeUs;
-    }
-
-    if(IS_DELAYING) {
-      Log.d("FestiveDCS", "IS DELAYNG");
-      //verificar se o atraso já encerrou
-      if(DELAYING < systemTime) {
-        IS_DELAYING = false;
-      }
-      //Para debug
-      Log.d("FestiveDCS", "Matei " + (++threadKilled) + " thread.");
-
-      //Retorna sem fazer download.
-      Log.d("FestiveDCS", "TEmpo:\nTime = " + systemTime + "\nDelay até = " + DELAYING);
-      return;
-    }
-    else {
-      //Não está atrasando...
-      if (bufferTotalTime < DEFAULT_BUFFER_TIME - DELTA) {
-        Log.d("FestiveDCS", "ESTADO NORMAL => DOWNLOADS OK!");
-        //Buffering State
-
-        //No evaluation. Download normal.
-
-        Log.d("FestiveDCS", "Download normal.\nSegue para DashChunkSource");
-      }
-      else {
-        Log.d("FestiveDCS", "VERIFICANDO NECESSIDADE DE DELAY");
-        long randomDelay = (new Random().nextLong() % DELTA);
-        Log.i("FestiveDCS", "Situação:\nRandomTime: " + (DEFAULT_BUFFER_TIME + randomDelay) + "\nBufferTime: " + bufferTotalTime);
-        if((DEFAULT_BUFFER_TIME + randomDelay) < bufferTotalTime) {
-          //Buffer cheio. Delaying será ativo.
-          DELAYING = systemTime + (bufferTotalTime/1000) - (DEFAULT_BUFFER_TIME/1000) - (randomDelay/1000);
-          IS_DELAYING = true;
-          Log.d("FestiveDCS", "Atrasarei " + ((bufferTotalTime/1000) - (DEFAULT_BUFFER_TIME/1000) - (randomDelay/1000)) + "ms");
-          //Para debug
-          threadKilled = 0;
-
-          //Retorna sem fazer download.
-          return;
-        }
-        else {
-
-
-          Log.d("FestiveDCS", "Download normal.\nSegue para DashChunkSource");
-        }
-      }
-    }
-
-
-    /**
-     *
-     * Aqui continua o DashChunkSource Original
-     *
-     */
 
     evaluation.queueSize = queue.size();
     if (evaluation.format == null || !lastChunkWasInitialization) {
@@ -465,7 +388,6 @@ public class FestiveDashChunkSource implements ChunkSource {
     lastChunkWasInitialization = false;
     out.chunk = nextMediaChunk;
 
-
     /**
      * Gerador de Logs
      */
@@ -475,7 +397,6 @@ public class FestiveDashChunkSource implements ChunkSource {
     else if(LogOnDemand.haveChunkLog) {
       LogOnDemand.addStartChunkLog(segmentNum, evaluation.format.id, evaluation.format.width);
     }
-
   }
 
   @Override

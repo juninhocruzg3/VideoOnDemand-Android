@@ -6,6 +6,7 @@ import com.google.android.exoplayer.chunk.Format;
 import com.google.android.exoplayer.chunk.FormatEvaluator;
 import com.google.android.exoplayer.chunk.MediaChunk;
 import com.google.android.exoplayer.upstream.BandwidthMeter;
+import com.promobile.vod.vodmobile.vodplayer.logs.LogOnDemand;
 
 import java.util.List;
 
@@ -76,7 +77,7 @@ public class ExoPlayerAdaptiveEvaluator implements FormatEvaluator {
 
     @Override
     public void enable() {
-        // Do nothing.
+        Log.d("ExoPlayerEvaluator", "Avaliador 'ExoPlayer' ativado!");
     }
 
     @Override
@@ -89,6 +90,21 @@ public class ExoPlayerAdaptiveEvaluator implements FormatEvaluator {
     public void evaluate(List<? extends MediaChunk> queue, long playbackPositionUs,
                          Format[] formats, Evaluation evaluation) {
         Log.d("VodPlayer.evaluate", "Executou 'evaluate'.'");
+
+        boolean isVideo = false;
+        if (formats[0].mimeType.substring(0, 5).equalsIgnoreCase("audio")) {
+            Log.d("ExoPlayerEvaluate", "Formato de Áudio");
+        }
+        else {
+            Log.d("ExoPlayerEvaluate", "Formato de Vídeo");
+            isVideo = true;
+        }
+
+        if(isVideo && !queue.isEmpty() && LogOnDemand.haveChunkLog) {
+            MediaChunk logChunk = queue.get(queue.size() - 1);
+            LogOnDemand.addFinishChunkLog(logChunk.getLength(), logChunk.nextChunkIndex, bandwidthMeter.getBitrateEstimate());
+        }
+
         long bufferedDurationUs = queue.isEmpty() ? 0
                 : queue.get(queue.size() - 1).endTimeUs - playbackPositionUs;
 

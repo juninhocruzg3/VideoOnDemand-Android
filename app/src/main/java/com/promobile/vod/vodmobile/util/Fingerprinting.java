@@ -28,6 +28,8 @@ import java.util.Map;
 
 public class Fingerprinting {
 
+    public static String FP_ID;
+
     private Context context;
 
     // Used to get network interface's info.
@@ -128,6 +130,8 @@ public class Fingerprinting {
     private void makeKey() throws JSONException {
         String key = md5(deviceId + width + height);
 
+        FP_ID = key;
+
         data.put("key", key);
     }
 
@@ -148,6 +152,7 @@ public class Fingerprinting {
                     h = "0" + h;
                 hexString.append(h);
             }
+
             return hexString.toString();
 
         } catch (NoSuchAlgorithmException e) {
@@ -166,6 +171,10 @@ public class Fingerprinting {
         this.listener = listener;
     }
 
+    public static String getFpId() {
+        return FP_ID;
+    }
+
     public interface Listener {
         void onFinish(String s);
     }
@@ -178,7 +187,6 @@ public class Fingerprinting {
                 @Override
                 public void onResponse(String response) {
                     Log.d("FP Response: ", response);
-
                 }
             }, new Response.ErrorListener() {
 

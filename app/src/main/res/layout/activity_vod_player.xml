@@ -3,7 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.promobile.vod.vodmobile.activities.VodPlayerActivity">
+    tools:context="com.promobile.vod.vodmobile.activities.VodPlayerActivity"
+    android:id="@+id/player_root_layout">
+
     <com.google.android.exoplayer.VideoSurfaceView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -11,49 +13,80 @@
         android:id="@+id/video_surface_view"
         android:onClick="onClickVideoSurfaceView"/>
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:orientation="horizontal"
+        android:layout_height="wrap_content"
+        android:id="@+id/player_top_bar"
+        android:layout_alignParentTop="true"
+        android:visibility="gone"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginLeft="20dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/player_tv_video_title"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/player_bottom_bar"
         android:layout_alignParentBottom="true"
-        android:id="@+id/layout_progress">
+        android:visibility="gone">
 
-        <SeekBar
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="20dp"
-            android:layout_gravity="center"
-            android:id="@+id/progress_bar"
-            android:onClick="onProgressClick"
-            style="@android:style/Widget.ProgressBar.Horizontal"/>
-    </LinearLayout>
+            android:layout_height="40dp"
+            android:orientation="horizontal"
+            android:id="@+id/layout_progress"
+            android:layout_alignParentBottom="true">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:orientation="horizontal"
-        android:layout_marginRight="20dp"
-        android:layout_marginEnd="20dp"
-        android:layout_alignTop="@id/layout_progress"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:id="@+id/layout_texts"
-        android:gravity="center_vertical|end|right">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/tv_current_position"
-            android:textColor="@android:color/white"
-            android:text="@string/traco"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
-            android:text="@string/barra"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
-            android:id="@+id/tv_duration"
-            android:text="@string/traco"/>
-    </LinearLayout>
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onClickPlayButton"/>
+
+            <SeekBar
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:id="@+id/progress_bar"
+                style="@android:style/Widget.ProgressBar.Horizontal"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:orientation="horizontal"
+            android:layout_marginRight="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_alignTop="@id/layout_progress"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:id="@+id/layout_texts"
+            android:gravity="center_vertical|end|right">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/tv_current_position"
+                android:textColor="@android:color/white"
+                android:text="@string/traco"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/white"
+                android:text="@string/barra"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/white"
+                android:id="@+id/tv_duration"
+                android:text="@string/traco"/>
+        </LinearLayout>
+
+    </RelativeLayout>
+
 </RelativeLayout>

@@ -6,6 +6,7 @@ import com.google.android.exoplayer.chunk.Format;
 import com.google.android.exoplayer.chunk.FormatEvaluator;
 import com.google.android.exoplayer.chunk.MediaChunk;
 import com.google.android.exoplayer.upstream.BandwidthMeter;
+import com.promobile.vod.vodmobile.vodplayer.logs.LogOnDemand;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -47,7 +48,7 @@ public class FestiveEvaluator implements FormatEvaluator {
 
     @Override
     public void enable() {
-        //Nada a fazer
+        Log.d("FestiveEvaluator", "Avaliador 'Festive' ativado!");
     }
 
     @Override
@@ -88,6 +89,13 @@ public class FestiveEvaluator implements FormatEvaluator {
         if(bitrateEstimate != -1) {
             if (isVideo) {
                 if(!queue.isEmpty()) {
+                    /**
+                     * Gerando Logs
+                     */
+                    if(isVideo && LogOnDemand.haveChunkLog) {
+                        MediaChunk logChunk = queue.get(queue.size() - 1);
+                        LogOnDemand.addFinishChunkLog(logChunk.getLength(), logChunk.nextChunkIndex, bitrateEstimate);
+                    }
 
                     /**
                      * Adicionando dados ao histórico de Chunks

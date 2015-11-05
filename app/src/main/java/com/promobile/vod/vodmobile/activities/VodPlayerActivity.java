@@ -11,7 +11,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.LinearLayout;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.LayoutAnimationController;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,6 +25,7 @@ import com.promobile.vod.vodmobile.connection.VodSource;
 import com.promobile.vod.vodmobile.model.Video;
 import com.promobile.vod.vodmobile.util.LocalStorage;
 import com.promobile.vod.vodmobile.vodplayer.VodPlayer;
+import com.promobile.vod.vodmobile.vodplayer.logs.LogOnDemand;
 import com.promobile.vod.vodmobile.vodplayer.util.TimeFormat;
 
 import java.io.IOException;
@@ -33,9 +37,9 @@ public class VodPlayerActivity extends Activity {
 
     private static int NUM_RENDERER = 2;
 
-    private TextView tvCurrentPosition, tvDuration;
+    private TextView tvCurrentPosition, tvDuration, tvTitle;
     private SeekBar progressBar;
-    private LinearLayout textLinearLayout, progressLinearLayout;
+    private RelativeLayout playerBottonBar, playerTopBar;
 
     private long currentPosition;
     private boolean thereIsThis;
@@ -62,12 +66,13 @@ public class VodPlayerActivity extends Activity {
 
         tvCurrentPosition = (TextView) findViewById(R.id.tv_current_position);
         tvDuration = (TextView) findViewById(R.id.tv_duration);
+        tvTitle = (TextView) findViewById(R.id.player_tv_video_title);
 
         progressBar = (SeekBar) findViewById(R.id.progress_bar);
         progressBar.setProgress(0);
 
-        textLinearLayout = (LinearLayout) findViewById(R.id.layout_texts);
-        progressLinearLayout = (LinearLayout) findViewById(R.id.layout_progress);
+        playerBottonBar = (RelativeLayout) findViewById(R.id.player_bottom_bar);
+        playerTopBar = (RelativeLayout) findViewById(R.id.player_top_bar);
     }
 
     private void buildBasicVodPlayer() {
@@ -83,6 +88,7 @@ public class VodPlayerActivity extends Activity {
 
         int dash_evaluator_mode = localStorage.getIntFromStorage(LocalStorage.FORMAT_SELECTED);
         String url = VodSource.URL_SERVER + video.getPath();
+        tvTitle.setText(video.getTitle());
 
         vodPlayer = new VodPlayer(getApplicationContext(), videoSurfaceView, NUM_RENDERER);
         try {
@@ -112,11 +118,21 @@ public class VodPlayerActivity extends Activity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                Log.i("VodPlayerAct", "BufferedPercentage: " + vodPlayer.getExoPlayer().getBufferedPercentage() +
-                        "\nCurrentPosition:" + ((double) vodPlayer.getExoPlayer().getCurrentPosition() / 1000.0) + "s" +
-                        "\nBufferedPosition: " + ((double) vodPlayer.getExoPlayer().getBufferedPosition() / 1000.0) + "s" +
-                        "\nDuration: " + ((double) vodPlayer.getExoPlayer().getDuration() / 1000.0) + "s" +
-                        "\nBufferTime: " + ((double) (vodPlayer.getExoPlayer().getBufferedPosition() - vodPlayer.getExoPlayer().getCurrentPosition())) / 1000.0 + "s");
+                int bufferedPercentage = vodPlayer.getExoPlayer().getBufferedPercentage();
+                long currentPosition = vodPlayer.getExoPlayer().getCurrentPosition();
+                long bufferedPosition = vodPlayer.getExoPlayer().getBufferedPosition();
+                long duration = vodPlayer.getExoPlayer().getDuration();
+                long bufferStock = vodPlayer.getExoPlayer().getBufferedPosition() - vodPlayer.getExoPlayer().getCurrentPosition();
+
+                if (LogOnDemand.haveBufferLog) {
+                    LogOnDemand.addBufferLog(bufferedPercentage, currentPosition, bufferedPosition, duration, bufferStock);
+                }
+
+                Log.i("VodPlayerAct", "BufferedPercentage: " + bufferedPercentage +
+                        "\nCurrentPosition:" + ((double) currentPosition / 1000.0) + "s" +
+                        "\nBufferedPosition: " + ((double) bufferedPosition / 1000.0) + "s" +
+                        "\nDuration: " + ((double) duration / 1000.0) + "s" +
+                        "\nBufferTime: " + ((double) (bufferStock)) / 1000.0 + "s");
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -126,10 +142,10 @@ public class VodPlayerActivity extends Activity {
                         progressBar.setSecondaryProgress((int) (100 * ((float) vodPlayer.getExoPlayer().getBufferedPosition() / (float) vodPlayer.getExoPlayer().getDuration())));
                     }
                 });
-                if(thereIsThis)
+                if (thereIsThis)
                     gerarLogs();
             }
-        }, 1000);
+        }, 2000);
     }
 
     @Override
@@ -155,22 +171,37 @@ public class VodPlayerActivity extends Activity {
     }
 
     public void onClickVideoSurfaceView(View view) {
-        if(vodPlayer.getPlayerStatus() == VodPlayer.PLAYING) {
-            vodPlayer.pause();
+        Animation bottonAnimation = null;
+        Animation topAnimation = null;
+        if(playerBottonBar.getVisibility() == View.VISIBLE) {
+            playerBottonBar.setVisibility(View.GONE);
+            playerTopBar.setVisibility(View.GONE);
+            bottonAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.hide_bottom_button);
+            topAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.hide_top_button);
         }
         else {
-            vodPlayer.start();
+            playerBottonBar.setVisibility(View.VISIBLE);
+            playerTopBar.setVisibility(View.VISIBLE);
+            bottonAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.show_bottom_button);
+            topAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.show_top_button);
         }
+        LayoutAnimationController bottonAnimationControler = new LayoutAnimationController(bottonAnimation);
+        LayoutAnimationController topAnimationControler = new LayoutAnimationController(topAnimation);
+        //playerBottonBar.setLayoutAnimation(bottonAnimationControler);
+        //playerTopBar.setLayoutAnimation(topAnimationControler);
+        playerBottonBar.startAnimation(bottonAnimation);
+        playerTopBar.startAnimation(topAnimation);
+
     }
 
     private void setViewsVisibility() {
         if(progressBar.getVisibility() == View.VISIBLE) {
-            progressLinearLayout.setVisibility(View.INVISIBLE);
-            textLinearLayout.setVisibility(View.INVISIBLE);
+            playerTopBar.setVisibility(View.INVISIBLE);
+            playerBottonBar.setVisibility(View.INVISIBLE);
         }
         else {
-            progressLinearLayout.setVisibility(View.VISIBLE);
-            textLinearLayout.setVisibility(View.VISIBLE);
+            playerTopBar.setVisibility(View.VISIBLE);
+            playerBottonBar.setVisibility(View.VISIBLE);
         }
     }
 
@@ -180,5 +211,14 @@ public class VodPlayerActivity extends Activity {
         thereIsThis = false;
 
         super.onStop();
+    }
+
+    public void onClickPlayButton(View view) {
+        if(vodPlayer.getPlayerStatus() == VodPlayer.PLAYING) {
+            vodPlayer.pause();
+        }
+        else {
+            vodPlayer.start();
+        }
     }
 }

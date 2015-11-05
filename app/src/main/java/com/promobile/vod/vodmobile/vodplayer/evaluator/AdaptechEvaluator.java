@@ -6,6 +6,7 @@ import com.google.android.exoplayer.chunk.Format;
 import com.google.android.exoplayer.chunk.FormatEvaluator;
 import com.google.android.exoplayer.chunk.MediaChunk;
 import com.google.android.exoplayer.upstream.BandwidthMeter;
+import com.promobile.vod.vodmobile.vodplayer.logs.LogOnDemand;
 import com.promobile.vod.vodmobile.vodplayer.util.ChunkHistoric;
 
 import java.util.ArrayList;
@@ -41,7 +42,7 @@ public class AdaptechEvaluator implements FormatEvaluator {
 
     @Override
     public void enable() {
-        //Nada a fazer.
+        Log.d("AdaptechEvaluator", "Avaliador 'Adaptech' ativado!");
     }
 
     @Override
@@ -74,6 +75,11 @@ public class AdaptechEvaluator implements FormatEvaluator {
         Format ideal = current;
 
         double bitrate = bandwidthMeter.getBitrateEstimate();
+
+        if(isVideo && !queue.isEmpty() && LogOnDemand.haveChunkLog) {
+            MediaChunk logChunk = queue.get(queue.size() - 1);
+            LogOnDemand.addFinishChunkLog(logChunk.getLength(), logChunk.nextChunkIndex, bitrate);
+        }
 
         Log.d(TAG, "historico.size= " + historic.size());
 
