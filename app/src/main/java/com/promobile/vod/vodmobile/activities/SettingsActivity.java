@@ -41,9 +41,14 @@ public class SettingsActivity extends AppCompatActivity {
                     localStorage.addToStorage(LocalStorage.IS_FORMAT_SELECTED, true);
                     localStorage.addToStorage(LocalStorage.FORMAT_SELECTED, VodPlayer.DEFAULT_EVALUATOR);
                     Toast.makeText(getApplicationContext(), "Avaliador ExoPlayer Selecionado!", Toast.LENGTH_SHORT).show();
+                } else if (checkedId == R.id.radioBtn_agile) {
+                    localStorage.addToStorage(LocalStorage.IS_FORMAT_SELECTED, true);
+                    localStorage.addToStorage(LocalStorage.FORMAT_SELECTED, VodPlayer.AGILE_EVALUATOR);
+                    Toast.makeText(getApplicationContext(), "AGILE Selecionado!", Toast.LENGTH_SHORT).show();
                 }
             }
         });
+        radioGroup.check(localStorage.getIntFromStorage(LocalStorage.FORMAT_SELECTED));
     }
 
     @Override

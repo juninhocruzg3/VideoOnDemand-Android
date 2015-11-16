@@ -19,6 +19,7 @@
     <string name="format_evaluator">Formato de Avaliação:</string>
     <string name="evaluator_adaptech">AdapTech Evaluator</string>
     <string name="evaluator_festive">FESTIVE Evaluator</string>
+    <string name="evaluator_agile">AGILE evaluator</string>
     <string name="save">Salvar</string>
     <string name="evaluator_default">Default Evaluator</string>
     <string name="menu_home">Início</string>
@@ -54,6 +55,5 @@
     <string name="uploaded">Postado em: </string>
     <string name="search">Buscar</string>
     <string name="connection_error">Erro ao baixar lista de canais. verifique a conexão.</string>
-
 
 </resources>

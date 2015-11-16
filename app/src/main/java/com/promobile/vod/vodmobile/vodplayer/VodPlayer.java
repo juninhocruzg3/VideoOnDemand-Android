@@ -35,9 +35,11 @@ import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer.upstream.UriDataSource;
 import com.google.android.exoplayer.util.ManifestFetcher;
 import com.promobile.vod.vodmobile.vodplayer.evaluator.AdaptechEvaluator;
+import com.promobile.vod.vodmobile.vodplayer.evaluator.AgileEvaluator;
 import com.promobile.vod.vodmobile.vodplayer.evaluator.ExoPlayerAdaptiveEvaluator;
 import com.promobile.vod.vodmobile.vodplayer.evaluator.FestiveEvaluator;
 import com.promobile.vod.vodmobile.vodplayer.evaluator.chunkSource.AdapTechDashChunkSource;
+import com.promobile.vod.vodmobile.vodplayer.evaluator.chunkSource.AgileDashChunkSource;
 import com.promobile.vod.vodmobile.vodplayer.evaluator.chunkSource.ExoPlayerDashChunkSource;
 import com.promobile.vod.vodmobile.vodplayer.evaluator.chunkSource.FestiveDashChunkSource;
 import com.promobile.vod.vodmobile.vodplayer.logs.LogOnDemand;
@@ -57,9 +59,17 @@ public class VodPlayer {
     }
 
     public interface VodPlayerListener {
+        public static final int AT_FINISH = 5;
+        public static final int AT_READY_PLAYING = 4;
+        public static final int AT_READY_IN_PAUSE = 3;
+        public static final int AT_STILL_PLAYING = 2;
+        public static final int AT_STILL_IN_PAUSE = 1;
+
         public abstract void onPrepared();
 
         public abstract void onLoadingError();
+
+        void onChangeLoaderState(int playbackState);
     }
 
     private final String TAG = "VodPlayer";
@@ -79,9 +89,10 @@ public class VodPlayer {
     public static final int PLAYING = 3;
     public static final int PAUSED = 4;
 
-    public static final int ADAPTECH_EVALUATOR = 0;
-    public static final int FESTIVE_EVALUATOR = 1;
-    public static final int DEFAULT_EVALUATOR = 2;
+    public static final int DEFAULT_EVALUATOR = 0;
+    public static final int ADAPTECH_EVALUATOR = 1;
+    public static final int FESTIVE_EVALUATOR = 2;
+    public static final int AGILE_EVALUATOR = 3;
 
     private Context context;
 
@@ -243,8 +254,12 @@ public class VodPlayer {
         }
         else if(evaluationMode == FESTIVE_EVALUATOR) {
             formatEvaluator = new FestiveEvaluator(bandwidthMeter);
-        } else if(evaluationMode == DEFAULT_EVALUATOR) {
+        }
+        else if(evaluationMode == DEFAULT_EVALUATOR) {
             formatEvaluator = new ExoPlayerAdaptiveEvaluator(bandwidthMeter);
+        }
+        else if(evaluationMode == AGILE_EVALUATOR) {
+            formatEvaluator = new AgileEvaluator(bandwidthMeter, AgileEvaluator.AGILE_MODE_BUFFER_OSCILLATIONS);
         }
 
         manifestFetcher = new ManifestFetcher<MediaPresentationDescription>(new MediaPresentationDescriptionParser(), "VodPlayer", mdpUrl, userAgent);
@@ -290,9 +305,14 @@ public class VodPlayer {
                 else if (evaluationMode == FESTIVE_EVALUATOR){
                     chunkSource = new FestiveDashChunkSource(videoDataSource, formatEvaluator, videoRepresentationList);
                     audioChunkSource = new FestiveDashChunkSource(audioDataSource, formatEvaluator, audioRepresentationList);
-                } else if (evaluationMode == DEFAULT_EVALUATOR) {
+                }
+                else if (evaluationMode == DEFAULT_EVALUATOR) {
                     chunkSource = new ExoPlayerDashChunkSource(videoDataSource, formatEvaluator, videoRepresentationList);
                     audioChunkSource = new ExoPlayerDashChunkSource(audioDataSource, formatEvaluator, audioRepresentationList);
+                }
+                else if (evaluationMode == AGILE_EVALUATOR) {
+                    chunkSource = new AgileDashChunkSource(videoDataSource, formatEvaluator, videoRepresentationList);
+                    audioChunkSource = new AgileDashChunkSource(audioDataSource, formatEvaluator, audioRepresentationList);
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Erro em DashChunckSource: " + e.getLocalizedMessage() + " | " + e.getMessage());
@@ -517,21 +537,26 @@ public class VodPlayer {
                 case 5:
                     // Fim de execução
                     LogOnDemand.sendLogs();
+                    vodPlayerListener.onChangeLoaderState(VodPlayerListener.AT_FINISH);
                     break;
                 case 4:
                     if(playWhenReady) {
-                        // Executando normal
+                        // Reproduzindo normal
+                        vodPlayerListener.onChangeLoaderState(VodPlayerListener.AT_READY_PLAYING);
                     }
                     else {
                         // Pausado normal
+                        vodPlayerListener.onChangeLoaderState(VodPlayerListener.AT_READY_IN_PAUSE);
                     }
                     LogOnDemand.addFinishStallLog();
                     break;
                 case 3:
                     if(playWhenReady) {
                         // Executando sem buffer
+                        vodPlayerListener.onChangeLoaderState(VodPlayerListener.AT_STILL_PLAYING);
                     } else {
                         // Pausado sem buffer
+                        vodPlayerListener.onChangeLoaderState(VodPlayerListener.AT_STILL_IN_PAUSE);
                     }
                     LogOnDemand.addStartStallLog();
                     break;
@@ -658,6 +683,11 @@ public class VodPlayer {
 
         @Override
         public void onLoadingError() {
+
+        }
+
+        @Override
+        public void onChangeLoaderState(int playbackState) {
 
         }
     }

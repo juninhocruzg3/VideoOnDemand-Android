@@ -14,6 +14,7 @@ import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -38,10 +39,10 @@ public class VodPlayerActivity extends Activity {
     private static int NUM_RENDERER = 2;
 
     private TextView tvCurrentPosition, tvDuration, tvTitle;
-    private SeekBar progressBar;
+    private SeekBar seekBar;
+    private ProgressBar progressBar;
     private RelativeLayout playerBottonBar, playerTopBar;
 
-    private long currentPosition;
     private boolean thereIsThis;
 
     @Override
@@ -68,8 +69,10 @@ public class VodPlayerActivity extends Activity {
         tvDuration = (TextView) findViewById(R.id.tv_duration);
         tvTitle = (TextView) findViewById(R.id.player_tv_video_title);
 
-        progressBar = (SeekBar) findViewById(R.id.progress_bar);
-        progressBar.setProgress(0);
+        seekBar = (SeekBar) findViewById(R.id.progress_bar);
+        seekBar.setProgress(0);
+
+        progressBar = (ProgressBar) findViewById(R.id.player_loading_bar);
 
         playerBottonBar = (RelativeLayout) findViewById(R.id.player_bottom_bar);
         playerTopBar = (RelativeLayout) findViewById(R.id.player_top_bar);
@@ -109,9 +112,35 @@ public class VodPlayerActivity extends Activity {
 
                 finish();
             }
+
+            @Override
+            public void onChangeLoaderState(int playbackState) {
+                switch (playbackState) {
+                    case 5:
+                        vodPlayer.release();
+                        finish();
+                        break;
+                    case 4:
+                        if(progressBar.getVisibility() == View.VISIBLE)
+                            progressBar.setVisibility(View.GONE);
+                        break;
+                    case 3:
+                        if(progressBar.getVisibility() == View.VISIBLE)
+                            progressBar.setVisibility(View.GONE);
+                        break;
+                    case 2:
+                        if(progressBar.getVisibility() == View.GONE)
+                            progressBar.setVisibility(View.VISIBLE);
+                        break;
+                    case 1:
+                        if(progressBar.getVisibility() == View.GONE)
+                            progressBar.setVisibility(View.VISIBLE);
+                        break;
+                }
+            }
         });
 
-        vodPlayer.setSeekBar(progressBar);
+        vodPlayer.setSeekBar(seekBar);
     }
 
     private void gerarLogs() {
@@ -138,8 +167,8 @@ public class VodPlayerActivity extends Activity {
                     public void run() {
                         tvCurrentPosition.setText(TimeFormat.miliToHHmmss(vodPlayer.getExoPlayer().getCurrentPosition()));
                         tvDuration.setText(TimeFormat.miliToHHmmss(vodPlayer.getExoPlayer().getDuration()));
-                        progressBar.setProgress((int) (100 * ((float) vodPlayer.getExoPlayer().getCurrentPosition() / (float) vodPlayer.getExoPlayer().getDuration())));
-                        progressBar.setSecondaryProgress((int) (100 * ((float) vodPlayer.getExoPlayer().getBufferedPosition() / (float) vodPlayer.getExoPlayer().getDuration())));
+                        seekBar.setProgress((int) (100 * ((float) vodPlayer.getExoPlayer().getCurrentPosition() / (float) vodPlayer.getExoPlayer().getDuration())));
+                        seekBar.setSecondaryProgress((int) (100 * ((float) vodPlayer.getExoPlayer().getBufferedPosition() / (float) vodPlayer.getExoPlayer().getDuration())));
                     }
                 });
                 if (thereIsThis)
@@ -195,7 +224,7 @@ public class VodPlayerActivity extends Activity {
     }
 
     private void setViewsVisibility() {
-        if(progressBar.getVisibility() == View.VISIBLE) {
+        if(seekBar.getVisibility() == View.VISIBLE) {
             playerTopBar.setVisibility(View.INVISIBLE);
             playerBottonBar.setVisibility(View.INVISIBLE);
         }

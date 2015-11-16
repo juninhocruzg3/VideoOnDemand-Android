@@ -89,4 +89,12 @@
 
     </RelativeLayout>
 
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/player_loading_bar"
+        android:indeterminateDrawable="@drawable/vod_progress_bar_2_yellow"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"/>
+
 </RelativeLayout>

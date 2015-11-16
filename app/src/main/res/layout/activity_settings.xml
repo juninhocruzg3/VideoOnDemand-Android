@@ -38,5 +38,11 @@
             android:layout_height="wrap_content"
             android:text="@string/evaluator_festive"
             android:id="@+id/radioBtn_festive" />
+
+        <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/evaluator_agile"
+            android:id="@+id/radioBtn_agile" />
     </RadioGroup>
 </LinearLayout>
